@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
-import 'package:sns_clocked_in/core/ui/entrance.dart';
 import 'package:sns_clocked_in/core/ui/motion.dart';
 import 'package:sns_clocked_in/core/ui/pressable_scale.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -97,8 +95,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Logo section (fixed header, rendered once)
-            _buildLogo(),
+            // Logo section (only on first page, no logo on others)
+            _buildLogo(_currentPage),
+
+            // Consistent spacing between logo and PageView
+            SizedBox(height: _currentPage == 0 ? AppSpacing.md : 0),
 
             // PageView content (only icon + title + description)
             Expanded(
@@ -127,29 +128,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   // Next/Get Started button
-                  Entrance(
-                    delay: const Duration(milliseconds: 120),
-                    child: PressableScale(
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _handleNext,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: AppRadius.mediumAll,
-                            ),
+                  PressableScale(
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _handleNext,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadius.mediumAll,
                           ),
-                          child: Text(
-                            _currentPage == _pages.length - 1
-                                ? 'Get Started'
-                                : 'Next',
-                            style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+                        ),
+                        child: Text(
+                          _currentPage == _pages.length - 1
+                              ? 'Get Started'
+                              : 'Next',
+                          style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -164,43 +162,69 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildLogo() {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.md,
-      ),
-      child: Image.asset(
-        'assets/images/splash_logo.png',
-        height: 90,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            'assets/images/app_log.png',
-            height: 90,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error2, stackTrace2) {
-              return const Icon(
-                Icons.access_time,
-                size: 90,
-                color: AppColors.primary,
-              );
-            },
-          );
-        },
-      ),
-    );
+  Widget _buildLogo(int currentPage) {
+    // Show full logo only on first page, no logo on pages 2 and 3
+    if (currentPage == 0) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
+        child: Image.asset(
+          'assets/images/splash_logo.png',
+          height: 90,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Image.asset(
+              'assets/images/app_log.png',
+              height: 90,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error2, stackTrace2) {
+                return const Icon(
+                  Icons.access_time,
+                  size: 90,
+                  color: AppColors.primary,
+                );
+              },
+            );
+          },
+        ),
+      );
+    } else {
+      // No logo on pages 2 and 3 - use shrink to maintain layout stability
+      return const SizedBox.shrink();
+    }
   }
 
   Widget _buildPage(OnboardingPage page) {
-    return Padding(
-      padding: AppSpacing.xlAll,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Illustration placeholder (Icon)
-          Entrance(
-            child: Container(
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.05),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            ),),
+            child: child,
+          ),
+        );
+      },
+      child: Padding(
+        key: ValueKey(page.title), // Key for AnimatedSwitcher
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg, // Increased for better vertical rhythm
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Illustration placeholder (Icon)
+            Container(
               width: 120,
               height: 120,
               decoration: BoxDecoration(
@@ -213,34 +237,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 color: AppColors.primary,
               ),
             ),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+            const SizedBox(height: AppSpacing.xl), // Fixed spacing for consistency
 
-          // Title
-          Entrance(
-            delay: const Duration(milliseconds: 60),
-            child: Text(
+            // Title
+            Text(
               page.title,
               style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
                 color: AppColors.primary,
               ),
               textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.lg), // Increased from md
 
-          // Description
-          Entrance(
-            delay: const Duration(milliseconds: 90),
-            child: Text(
+            // Description
+            Text(
               page.description,
               style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
