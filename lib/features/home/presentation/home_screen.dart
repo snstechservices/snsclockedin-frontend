@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/design_system/app_colors.dart';
+import 'package:sns_clocked_in/design_system/app_spacing.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,6 +10,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('SNS Clocked In'),
         actions: [
@@ -14,17 +18,15 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: () {
-              // TODO(dev): Implement logout in Step 2
-              // - Clear auth token
-              // - Clear user data
-              context.go('/login');
+              // Clear auth state - router will handle navigation
+              context.read<AppState>().logout();
             },
           ),
         ],
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: AppSpacing.xlAll,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -33,13 +35,13 @@ class HomeScreen extends StatelessWidget {
                 size: 100,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: AppSpacing.xl),
               Text(
                 'Welcome to SNS Clocked In',
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.l),
               Text(
                 'Foundation setup complete!\nReady for feature implementation.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -47,10 +49,10 @@ class HomeScreen extends StatelessWidget {
                     ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
+              SizedBox(height: AppSpacing.xl * 2),
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: AppSpacing.lAll,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -58,7 +60,7 @@ class HomeScreen extends StatelessWidget {
                         'Next Steps (Step 2+):',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.m),
                       _buildBulletPoint(context, 'Implement authentication flow'),
                       _buildBulletPoint(context, 'Add time tracking features'),
                       _buildBulletPoint(context, 'Integrate with backend API'),
@@ -77,7 +79,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildBulletPoint(BuildContext context, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: AppSpacing.s),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -86,7 +88,7 @@ class HomeScreen extends StatelessWidget {
             size: 8,
             color: Theme.of(context).colorScheme.primary,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: AppSpacing.s),
           Expanded(
             child: Text(
               text,

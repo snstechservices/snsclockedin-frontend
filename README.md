@@ -131,15 +131,31 @@ Environment-specific configuration is managed via `.env` files:
 - API client scaffolding with Dio
 - Environment configuration
 
-## Next Steps (Step 2+)
+**Step 2 Complete**: Provider-based session/app state and router guards:
+- AppState with bootstrap and authentication management
+- Router guards for automatic navigation
+- API client token provider integration
+- Correlation ID generation per request
+- Mock authentication flow
 
-- [ ] Implement authentication flow (login, logout, token storage)
+## Migration Documentation
+
+See [MIGRATION_STEPS.md](./MIGRATION_STEPS.md) for detailed documentation of all migration steps, including:
+- Files created/modified
+- Implementation details
+- Linting issues and fixes
+- Architecture decisions
+- Verification steps
+
+## Next Steps (Step 3+)
+
+- [ ] Real authentication API integration
 - [ ] Add time tracking features
 - [ ] Integrate with backend API
 - [ ] Add offline sync capability
 - [ ] Migrate features from old codebase
-- [ ] Add Firebase integration
-- [ ] Implement local database (Hive/Drift)
+- [ ] Add Firebase integration (if needed)
+- [ ] Implement local database (Hive/Drift) (if needed)
 
 ## License
 

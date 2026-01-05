@@ -1,6 +1,21 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sns_clocked_in/core/config/env.dart';
+import 'package:uuid/uuid.dart';
+
+/// API exception wrapper for better error handling
+class ApiException implements Exception {
+  ApiException({
+    required this.message,
+    this.statusCode,
+  });
+
+  final String message;
+  final int? statusCode;
+
+  @override
+  String toString() => 'ApiException: $message${statusCode != null ? ' (Status: $statusCode)' : ''}';
+}
 
 /// Singleton API client using Dio for HTTP requests
 class ApiClient {
@@ -25,21 +40,29 @@ class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
 
   late final Dio _dio;
+  String? Function()? _tokenGetter;
+  final _uuid = const Uuid();
 
   Dio get dio => _dio;
+
+  /// Set token provider function
+  // ignore: use_setters_to_change_properties
+  void setTokenProvider(String? Function()? tokenGetter) {
+    _tokenGetter = tokenGetter;
+  }
 
   void _setupInterceptors() {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // TODO(dev): Add correlation ID header
-          // options.headers['X-Correlation-ID'] = uuid.v4();
+          // Add correlation ID header
+          options.headers['X-Correlation-Id'] = _uuid.v4();
 
-          // TODO(dev): Add auth token in Step 2
-          // final token = getStoredToken();
-          // if (token != null) {
-          //   options.headers['Authorization'] = 'Bearer $token';
-          // }
+          // Add auth token if available
+          final token = _tokenGetter?.call();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
 
           // Debug logging in development
           if (Env.isDevelopment) {
@@ -64,12 +87,20 @@ class ApiClient {
             debugPrint('ERROR MESSAGE: ${error.message}');
           }
 
-          // TODO(dev): Add global error handling
-          // - Token expiry -> redirect to login
-          // - Network errors -> show retry dialog
-          // - Server errors -> show error message
+          // Wrap DioException into ApiException
+          final apiException = ApiException(
+            message: error.message ?? 'Unknown error',
+            statusCode: error.response?.statusCode,
+          );
 
-          return handler.next(error);
+          return handler.next(
+            DioException(
+              requestOptions: error.requestOptions,
+              response: error.response,
+              type: error.type,
+              error: apiException,
+            ),
+          );
         },
       ),
     );

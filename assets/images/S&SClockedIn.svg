@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+  <!-- Remove white background - splash screen already has white background -->
+  <g id="Logo_Clock" data-name="Logo Clock">
+    <!-- CLOCKED IN text - converted from CSS class to inline fill -->
+    <text fill="#13213c" font-family="Arial, sans-serif" font-size="97" font-weight="700" letter-spacing="0.1em" transform="translate(171.12 821.09)">
+      <tspan x="0" y="0">CLOCKED IN</tspan>
+    </text>
+    <!-- S&amp;S text - converted from CSS class to inline fill -->
+    <text fill="#09253f" font-family="Arial, sans-serif" font-size="315.36" font-weight="700" letter-spacing="0.12em" transform="translate(162.93 728.22)">
+      <tspan x="0" y="0">S&amp;S</tspan>
+    </text>
+    <!-- Clock elements -->
+    <g>
+      <rect fill="#0675bc" x="219.54" y="305.21" width="57.81" height="16.7" rx="3.3" ry="3.3" transform="translate(190.07 -82.21) rotate(30)"/>
+      <rect fill="#0675bc" x="323.77" y="200.63" width="57.81" height="16.7" rx="3.3" ry="3.3" transform="translate(357.32 -200.93) rotate(60)"/>
+      <rect fill="#0675bc" x="466.29" y="163.4" width="57.81" height="16.7" rx="3.3" ry="3.3" transform="translate(666.94 -323.44) rotate(90)"/>
+      <rect fill="#0675bc" x="610.04" y="203.34" width="57.81" height="16.7" rx="3.3" ry="3.3" transform="translate(1116 -263.17) rotate(116.8)"/>
+      <rect fill="#0675bc" x="714.19" y="305.2" width="57.81" height="16.7" rx="3.3" ry="3.3" transform="translate(1539.1 183.7) rotate(147.86)"/>
+      <rect fill="#0675bc" x="751.66" y="447.32" width="57.81" height="16.7" rx="3.3" ry="3.3" transform="translate(1561.12 911.35) rotate(180)"/>
+      <rect fill="#0675bc" x="181.18" y="447.74" width="57.81" height="16.7" rx="3.3" ry="3.3"/>
+      <rect fill="#0675bc" x="490.94" y="291.99" width="9.23" height="157.8" rx="1.82" ry="1.82"/>
+      <rect fill="#0675bc" x="429.05" y="238.59" width="9.23" height="222.36" rx="1.82" ry="1.82" transform="translate(-116.79 263.69) rotate(-30)"/>
+      <circle fill="#0675bc" cx="496.04" cy="457.61" r="19.12"/>
+    </g>
+  </g>
+</svg>
