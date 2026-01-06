@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/core/ui/motion.dart';
 import 'package:sns_clocked_in/core/ui/pressable_scale.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -70,90 +71,89 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
+    return AppScreenScaffold(
+      // keep top area clean; header provides the Skip button
+      header: Padding(
+        padding: AppSpacing.mdAll,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // Top row: Spacer + Skip button (top-right)
-            Padding(
-              padding: AppSpacing.mdAll,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: _handleSkip,
-                    child: Text(
-                      'Skip',
-                      style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
+            TextButton(
+              onPressed: _handleSkip,
+              child: Text(
+                'Skip',
+                style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+      // Main content: logo + pageview
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final pageViewHeight = (constraints.maxHeight * 0.5).clamp(300.0, 520.0);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Logo section (only on first page)
+              _buildLogo(_currentPage),
 
-            // Logo section (only on first page, no logo on others)
-            _buildLogo(_currentPage),
+              // spacing
+              SizedBox(height: _currentPage == 0 ? AppSpacing.md : 0),
 
-            // Consistent spacing between logo and PageView
-            SizedBox(height: _currentPage == 0 ? AppSpacing.md : 0),
-
-            // PageView content (only icon + title + description)
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                itemCount: _pages.length,
-                itemBuilder: (context, index) {
-                  return _buildPage(_pages[index]);
-                },
+              SizedBox(
+                height: pageViewHeight,
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  itemCount: _pages.length,
+                  itemBuilder: (context, index) {
+                    return _buildPage(_pages[index]);
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      // Dots and Next/Get Started pinned near bottom
+      footer: Padding(
+        padding: AppSpacing.xlAll,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _pages.length,
+                (index) => _buildDot(index == _currentPage),
               ),
             ),
-
-            // Dots indicator and Next button
-            Padding(
-              padding: AppSpacing.xlAll,
-              child: Column(
-                children: [
-                  // Dots indicator
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _pages.length,
-                      (index) => _buildDot(index == _currentPage),
+            const SizedBox(height: AppSpacing.xl),
+            PressableScale(
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _handleNext,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.mediumAll,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
-                  // Next/Get Started button
-                  PressableScale(
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _handleNext,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: AppRadius.mediumAll,
-                          ),
-                        ),
-                        child: Text(
-                          _currentPage == _pages.length - 1
-                              ? 'Get Started'
-                              : 'Next',
-                          style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                  child: Text(
+                    _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                    style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ],

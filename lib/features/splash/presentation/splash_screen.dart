@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
-import 'package:sns_clocked_in/features/auth/presentation/login_screen.dart';
+// removed unused imports
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -124,50 +124,48 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final theme = Theme.of(context);
-            final primaryColor = theme.colorScheme.primary;
+    return AppScreenScaffold(
+      // Keep splash minimal - no header/footer
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final theme = Theme.of(context);
+          final primaryColor = theme.colorScheme.primary;
 
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Full App Logo with responsive sizing and pulse animation
-                  ScaleTransition(
-                    scale: _pulseAnimation,
-                    child: _buildFullLogo(),
-                  ),
-                  SizedBox(height: constraints.maxHeight * 0.05),
-                  // Loading indicator - optimized for smooth animation
-                  RepaintBoundary(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                        strokeWidth: 2.5,
-                      ),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Full App Logo with responsive sizing and pulse animation
+                ScaleTransition(
+                  scale: _pulseAnimation,
+                  child: _buildFullLogo(),
+                ),
+                SizedBox(height: constraints.maxHeight * 0.05),
+                // Loading indicator - optimized for smooth animation
+                RepaintBoundary(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                      strokeWidth: 2.5,
                     ),
                   ),
-                  SizedBox(height: constraints.maxHeight * 0.025),
-                  // Subtle loading text
-                  Text(
-                    'Loading...',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
+                ),
+                SizedBox(height: constraints.maxHeight * 0.025),
+                // Subtle loading text
+                Text(
+                  'Loading...',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    fontSize: 14,
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

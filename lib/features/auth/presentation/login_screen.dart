@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
+import 'package:sns_clocked_in/core/ui/app_surface_card.dart';
 import 'package:sns_clocked_in/core/ui/motion.dart';
 import 'package:sns_clocked_in/core/ui/pressable_scale.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -147,114 +149,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          systemNavigationBarColor: Colors.transparent,
-          systemNavigationBarIconBrightness: Brightness.dark,
-        ),
-        child: Stack(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: AppScreenScaffold(
+        extendBodyBehindAppBar: true,
+        footer: _buildFooter(),
+        child: Column(
           children: [
-            // Full-bleed gradient background behind system bars
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.1),
-                      AppColors.background,
-                      AppColors.primary.withValues(alpha: 0.05),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Content: allow gradient to extend behind the top status bar
-            SafeArea(
-              top: false,
-              left: false,
-              right: false,
-              child: _buildMobileLayout(),
-            ),
+            _buildAnimatedHeader(),
+            const SizedBox(height: AppSpacing.xl),
+            _buildAnimatedLoginForm(),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildMobileLayout() {
-    final media = MediaQuery.of(context);
-    const baseHorizontal = 24.0;
-    final leftPad = baseHorizontal + media.padding.left;
-    final rightPad = baseHorizontal + media.padding.right;
-    final availableWidthForForm = (media.size.width - leftPad - rightPad).clamp(
-      0.0,
-      double.infinity,
-    );
-    // Constrain form card width on large screens (max 460 for better use of space)
-    final formMaxWidth = availableWidthForForm > 460
-        ? 460.0
-        : availableWidthForForm;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final h = constraints.maxHeight;
-
-        // Tighter + more controlled spacing (works better on tall screens)
-        final topPad = (h * 0.035).clamp(16.0, 34.0);
-        final betweenHeaderAndCard = (h * 0.035).clamp(14.0, 28.0);
-
-        return CustomScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(
-                leftPad,
-                media.padding.top + topPad,
-                rightPad,
-                media.padding.bottom + 12.0,
-              ),
-              sliver: SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  children: [
-                    // Small top spacer that scales but never becomes huge
-                    SizedBox(height: (h * 0.03).clamp(8.0, 22.0)),
-
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: formMaxWidth),
-                        child: _buildAnimatedHeader(),
-                      ),
-                    ),
-
-                    SizedBox(height: betweenHeaderAndCard),
-
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: formMaxWidth),
-                        child: _buildAnimatedLoginForm(),
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    _buildFooter(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -290,11 +202,11 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         children: [
           Container(
-            width: 100, // Reduced from 120
-            height: 100, // Reduced from 120
+            width: 92, // Smaller for clean look
+            height: 92,
             constraints: const BoxConstraints(
-              maxWidth: 110,
-              maxHeight: 110,
+              maxWidth: 96,
+              maxHeight: 96,
               minWidth: 80,
               minHeight: 80,
             ),
@@ -322,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
               },
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg), // Increased spacing between logo and title
           GestureDetector(
             onLongPress: () {
               if (kDebugMode) {
@@ -345,9 +257,9 @@ class _LoginScreenState extends State<LoginScreen> {
               textAlign: TextAlign.center,
               style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
                 color: AppColors.primary,
-                fontSize: 24,
+                fontSize: 26,
                 fontWeight: FontWeight.w600,
-                letterSpacing: 0.2,
+                letterSpacing: 0.1,
               ),
             ),
           ),
@@ -396,22 +308,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLoginForm() {
     // RepaintBoundary prevents unnecessary repaints of the form
     return RepaintBoundary(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16), // Slightly reduced from largeAll
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.08), // Subtle border
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06), // Softer shadow
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(18), // Premium spacing
+      child: AppSurfaceCard(
         child: Form(
           key: _formKey,
           child: Column(
@@ -628,9 +525,42 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  // Register link inside card
+                  // OR separator
+                  const SizedBox(height: 14),
+                  _buildOrDivider(),
                   const SizedBox(height: 12),
-                  _buildRegisterButton(),
+
+                  // Register link section
+                  Text(
+                    "Don't have an account?",
+                    textAlign: TextAlign.center,
+                    style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                      color: AppColors.muted.withValues(alpha: 0.7),
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              _showSnackBar('Company registration coming soon');
+                            },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Register your company',
+                        style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15, // Slightly smaller than main button
+                        ),
+                      ),
+                    ),
+                  ),
             ],
           ),
         ),
@@ -638,30 +568,35 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildRegisterButton() {
-    return OutlinedButton(
-      onPressed: _isLoading
-          ? null
-          : () {
-              _showSnackBar('Company registration coming soon');
-            },
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        minimumSize: const Size(88, 44),
-        side: BorderSide(
-          color: AppColors.primary.withValues(alpha: 0.3),
+  Widget _buildOrDivider() {
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            thickness: 1,
+            height: 1,
+            color: AppColors.muted.withValues(alpha: 0.4),
+          ),
         ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadius.smallAll,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'OR',
+            style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+              color: AppColors.muted.withValues(alpha: 0.5),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
-      ),
-      child: Text(
-        'Register your company',
-        style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w500,
+        Expanded(
+          child: Divider(
+            thickness: 1,
+            height: 1,
+            color: AppColors.muted.withValues(alpha: 0.4),
+          ),
         ),
-      ),
+      ],
     );
   }
 

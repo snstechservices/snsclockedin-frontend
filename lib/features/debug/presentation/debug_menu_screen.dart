@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
-import 'package:sns_clocked_in/core/storage/onboarding_storage.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
+import 'package:sns_clocked_in/core/ui/app_surface_card.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
 import 'package:sns_clocked_in/design_system/app_radius.dart';
 import 'package:sns_clocked_in/design_system/app_spacing.dart';
@@ -56,7 +57,7 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
 
   Future<void> _markOnboardingSeen() async {
     // Update AppState cache (which also persists to storage)
-    await context.read<AppState>().setOnboardingSeen(value: true);
+    await context.read<AppState>().setOnboardingSeen();
     await _loadStatus();
     _showSnackBar('Onboarding marked as seen');
   }
@@ -84,90 +85,85 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
         foregroundColor: Colors.white,
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.xlAll,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Current values section
-              Card(
-                child: Padding(
-                  padding: AppSpacing.mdAll,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Current Values',
-                        style: AppTypography.lightTextTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      if (_isLoading)
-                        const CircularProgressIndicator()
-                      else
-                        _buildStatusRow(
-                          'onboarding_seen_v2',
-                          _onboardingSeen.toString(),
-                        ),
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildStatusRow(
-                        'Auth Token',
-                        appState.accessToken != null
-                            ? 'Present'
-                            : 'Not implemented',
-                      ),
-                    ],
+      body: AppScreenScaffold(
+        topPadding: AppSpacing.lg,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Current values section
+            AppSurfaceCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Current Values',
+                    style: AppTypography.lightTextTheme.headlineMedium,
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.md),
+                  if (_isLoading)
+                    const CircularProgressIndicator()
+                  else
+                    _buildStatusRow(
+                      'onboarding_seen_v2',
+                      _onboardingSeen.toString(),
+                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildStatusRow(
+                    'Auth Token',
+                    appState.accessToken != null
+                        ? 'Present'
+                        : 'Not implemented',
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.xl),
+            ),
+            const SizedBox(height: AppSpacing.xl),
 
-              // Navigation buttons
-              Text(
-                'Navigation',
-                style: AppTypography.lightTextTheme.headlineMedium,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildActionButton(
-                label: 'Go to Onboarding',
-                icon: Icons.arrow_forward,
-                onPressed: () => context.go('/onboarding'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _buildActionButton(
-                label: 'Go to Login',
-                icon: Icons.login,
-                onPressed: () => context.go('/login'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _buildActionButton(
-                label: 'Go to Home',
-                icon: Icons.home,
-                onPressed: () => context.go('/home'),
-              ),
-              const SizedBox(height: AppSpacing.xl),
+            // Navigation buttons
+            Text(
+              'Navigation',
+              style: AppTypography.lightTextTheme.headlineMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildActionButton(
+              label: 'Go to Onboarding',
+              icon: Icons.arrow_forward,
+              onPressed: () => context.go('/onboarding'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildActionButton(
+              label: 'Go to Login',
+              icon: Icons.login,
+              onPressed: () => context.go('/login'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildActionButton(
+              label: 'Go to Home',
+              icon: Icons.home,
+              onPressed: () => context.go('/home'),
+            ),
+            const SizedBox(height: AppSpacing.xl),
 
-              // Onboarding controls
-              Text(
-                'Onboarding Controls',
-                style: AppTypography.lightTextTheme.headlineMedium,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildActionButton(
-                label: 'Reset Onboarding Flag',
-                icon: Icons.refresh,
-                onPressed: _resetOnboarding,
-                backgroundColor: AppColors.warning,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _buildActionButton(
-                label: 'Mark Onboarding Seen',
-                icon: Icons.check_circle,
-                onPressed: _markOnboardingSeen,
-                backgroundColor: AppColors.success,
-              ),
-            ],
-          ),
+            // Onboarding controls
+            Text(
+              'Onboarding Controls',
+              style: AppTypography.lightTextTheme.headlineMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildActionButton(
+              label: 'Reset Onboarding Flag',
+              icon: Icons.refresh,
+              onPressed: _resetOnboarding,
+              backgroundColor: AppColors.warning,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildActionButton(
+              label: 'Mark Onboarding Seen',
+              icon: Icons.check_circle,
+              onPressed: _markOnboardingSeen,
+              backgroundColor: AppColors.success,
+            ),
+          ],
         ),
       ),
     );
