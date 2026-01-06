@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/role/role.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/core/ui/app_card.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/core/ui/entrance.dart';
 import 'package:sns_clocked_in/core/ui/motion.dart';
+import 'package:sns_clocked_in/core/ui/section_header.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
 import 'package:sns_clocked_in/design_system/app_radius.dart';
 import 'package:sns_clocked_in/design_system/app_spacing.dart';
@@ -35,54 +38,41 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.lgAll,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Greeting card with entrance animation
-              Entrance(
-                child: _buildGreetingCard(),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+    return AppScreenScaffold(
+      floatingActionButton: kDebugMode ? _buildDebugFAB(context) : null,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: AppSpacing.lg),
+            // Greeting card with entrance animation
+            Entrance(
+              child: _buildGreetingCard(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
 
-              // Today's Status card
-              _buildStatusCard(),
-              const SizedBox(height: AppSpacing.lg),
+            // Today's Status card
+            _buildStatusCard(),
+            const SizedBox(height: AppSpacing.lg),
 
-              // Quick Actions section with entrance animation
-              Entrance(
-                delay: const Duration(milliseconds: 100),
-                child: _buildQuickActionsSection(),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+            // Quick Actions section with entrance animation
+            Entrance(
+              delay: const Duration(milliseconds: 100),
+              child: _buildQuickActionsSection(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
 
-              // Overview placeholder
-              _buildOverviewPlaceholder(),
-            ],
-          ),
+            // Overview placeholder
+            _buildOverviewPlaceholder(),
+            const SizedBox(height: AppSpacing.lg),
+          ],
         ),
       ),
-      floatingActionButton: kDebugMode ? _buildDebugFAB(context) : null,
     );
   }
 
   Widget _buildGreetingCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
       padding: AppSpacing.lgAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,18 +165,7 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
         break;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
       padding: AppSpacing.lgAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,13 +207,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
 
   Widget _buildQuickActionsSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Quick Actions',
-          style: AppTypography.lightTextTheme.labelLarge,
-        ),
-        const SizedBox(height: AppSpacing.md),
+        const SectionHeader('Quick Actions'),
         // Large primary Clock In/Out card
         _buildPrimaryActionCard(),
         const SizedBox(height: AppSpacing.md),
@@ -328,24 +303,11 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
     required VoidCallback onTap,
     bool isWide = false,
   }) {
-    return InkWell(
+    return AppCard(
+      width: isWide ? double.infinity : null,
+      padding: AppSpacing.lgAll,
       onTap: onTap,
-      borderRadius: AppRadius.mediumAll,
-      child: Container(
-        width: isWide ? double.infinity : null,
-        padding: AppSpacing.lgAll,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.mediumAll,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
@@ -363,23 +325,11 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
   Widget _buildOverviewPlaceholder() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
       padding: AppSpacing.xlAll,
       child: Column(
         children: [

@@ -11,7 +11,7 @@ class AdminSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScreenScaffold(
       title: 'Settings',
-      body: _buildComingSoonPlaceholder(
+      child: _buildComingSoonPlaceholder(
         context,
         Icons.settings_outlined,
       ),

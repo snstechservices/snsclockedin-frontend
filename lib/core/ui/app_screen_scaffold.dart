@@ -5,34 +5,27 @@ import 'package:sns_clocked_in/design_system/app_radius.dart';
 import 'package:sns_clocked_in/design_system/app_spacing.dart';
 import 'package:sns_clocked_in/design_system/app_typography.dart';
 
-/// Reusable screen scaffold with title, subtitle, and card-wrapped content
+/// Reusable screen scaffold with consistent styling
 ///
 /// Provides:
 /// - Consistent background (AppColors.background)
 /// - SafeArea handling
-/// - Title and optional subtitle using design system typography
-/// - Content area in white card with shadow and rounded corners
-/// - Responsive max width (560px) with center alignment
-/// - Optional back button and action buttons
+/// - Optional AppBar with title and actions
+/// - Default horizontal padding (24px)
+/// - Support for floatingActionButton and bottomNavigationBar
 class AppScreenScaffold extends StatelessWidget {
   const AppScreenScaffold({
     super.key,
-    required this.title,
-    this.subtitle,
-    required this.body,
+    this.title,
     this.actions,
     this.showBack = false,
-    this.padding = AppSpacing.lgAll,
+    required this.child,
+    this.floatingActionButton,
+    this.bottomNavigationBar,
   });
 
-  /// Screen title
-  final String title;
-
-  /// Optional subtitle below title
-  final String? subtitle;
-
-  /// Main content widget (wrapped in card)
-  final Widget body;
+  /// Optional screen title (shows AppBar if provided)
+  final String? title;
 
   /// Optional action buttons in app bar
   final List<Widget>? actions;
@@ -40,8 +33,14 @@ class AppScreenScaffold extends StatelessWidget {
   /// Show back button (default: false)
   final bool showBack;
 
-  /// Padding for the content card (default: AppSpacing.lgAll)
-  final EdgeInsets padding;
+  /// Main content widget
+  final Widget child;
+
+  /// Optional floating action button
+  final Widget? floatingActionButton;
+
+  /// Optional bottom navigation bar
+  final Widget? bottomNavigationBar;
 
   @override
   Widget build(BuildContext context) {
@@ -49,30 +48,18 @@ class AppScreenScaffold extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(context),
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: SingleChildScrollView(
-              padding: AppSpacing.lgAll,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title section
-                  _buildTitleSection(context),
-                  const SizedBox(height: AppSpacing.lg),
-                  // Content card
-                  _buildContentCard(context),
-                ],
-              ),
-            ),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: child,
         ),
       ),
+      floatingActionButton: floatingActionButton,
+      bottomNavigationBar: bottomNavigationBar,
     );
   }
 
   PreferredSizeWidget? _buildAppBar(BuildContext context) {
-    if (!showBack && (actions == null || actions!.isEmpty)) {
+    if (title == null && !showBack && (actions == null || actions!.isEmpty)) {
       return null;
     }
 
@@ -85,49 +72,13 @@ class AppScreenScaffold extends StatelessWidget {
               onPressed: () => context.pop(),
             )
           : null,
+      title: title != null
+          ? Text(
+              title!,
+              style: AppTypography.lightTextTheme.headlineMedium,
+            )
+          : null,
       actions: actions,
-    );
-  }
-
-  Widget _buildTitleSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: AppTypography.lightTextTheme.headlineMedium,
-        ),
-        if (subtitle != null) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            subtitle!,
-            style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildContentCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.largeAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: padding,
-        child: body,
-      ),
     );
   }
 }

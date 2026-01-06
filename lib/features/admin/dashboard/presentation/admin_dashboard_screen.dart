@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/role/role.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/core/ui/app_card.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/core/ui/entrance.dart';
+import 'package:sns_clocked_in/core/ui/section_header.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
 import 'package:sns_clocked_in/design_system/app_radius.dart';
 import 'package:sns_clocked_in/design_system/app_spacing.dart';
@@ -29,64 +32,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.lgAll,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Entrance(
-                child: _buildHeaderCard(),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildSummaryGrid(),
-              const SizedBox(height: AppSpacing.xl),
-              Entrance(
-                delay: const Duration(milliseconds: 100),
-                child: _buildActions(),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildOverviewPlaceholder(),
-            ],
-          ),
+    return AppScreenScaffold(
+      floatingActionButton: kDebugMode ? _buildDebugFAB(context) : null,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: AppSpacing.lg),
+            Entrance(
+              child: _buildHeaderCard(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _buildSummaryGrid(),
+            const SizedBox(height: AppSpacing.xl),
+            Entrance(
+              delay: const Duration(milliseconds: 100),
+              child: _buildActions(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _buildOverviewPlaceholder(),
+            const SizedBox(height: AppSpacing.lg),
+          ],
         ),
       ),
-      floatingActionButton: kDebugMode ? _buildDebugFAB(context) : null,
-      floatingActionButtonLocation: kDebugMode
-          ? FloatingActionButtonLocation.endFloat
-          : null,
-    );
-  }
-
-  /// Reusable card widget with consistent styling
-  Widget _AppCard({
-    required Widget child,
-    double? width,
-  }) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 
   Widget _buildHeaderCard() {
-    return _AppCard(
-      child: Padding(
-        padding: AppSpacing.lgAll,
-        child: Column(
+    return AppCard(
+      padding: AppSpacing.lgAll,
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -132,7 +107,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
         ],
-      ),
       ),
     );
   }
@@ -207,8 +181,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     IconData icon,
     double width,
   ) {
-    return _AppCard(
+    return AppCard(
       width: width,
+      padding: AppSpacing.lgAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -240,13 +215,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildActions() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Actions',
-          style: AppTypography.lightTextTheme.labelLarge,
-        ),
-        const SizedBox(height: AppSpacing.md),
+        const SectionHeader('Actions'),
         _primaryActionCard(
           label: 'My Attendance',
           icon: Icons.access_time,
@@ -330,11 +301,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return AppCard(
       onTap: onTap,
-      borderRadius: AppRadius.mediumAll,
-      child: _AppCard(
-        child: Column(
+      padding: AppSpacing.lgAll,
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: AppColors.primary, size: 28),
@@ -350,15 +320,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
   Widget _buildOverviewPlaceholder() {
-    return _AppCard(
-      child: Padding(
-        padding: AppSpacing.xlAll,
-        child: Column(
+    return AppCard(
+      padding: AppSpacing.xlAll,
+      child: Column(
           children: [
             Icon(Icons.show_chart, size: 48, color: AppColors.textSecondary),
             const SizedBox(height: AppSpacing.md),
@@ -374,7 +342,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 

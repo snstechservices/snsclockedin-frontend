@@ -11,7 +11,7 @@ class AdminReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScreenScaffold(
       title: 'Reports',
-      body: _buildComingSoonPlaceholder(
+      child: _buildComingSoonPlaceholder(
         context,
         Icons.assessment_outlined,
       ),

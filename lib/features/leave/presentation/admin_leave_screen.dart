@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sns_clocked_in/core/ui/app_card.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/features/leave/application/leave_store.dart';
 import 'package:sns_clocked_in/features/leave/domain/leave_request.dart';
 import 'package:sns_clocked_in/features/notifications/application/notifications_store.dart';
@@ -34,44 +36,43 @@ class _AdminLeaveScreenState extends State<AdminLeaveScreen> {
     final leaveStore = context.watch<LeaveStore>();
     final filteredLeaves = leaveStore.getLeaveRequestsByStatus(_selectedFilter);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Filter Chips
-            Padding(
-              padding: AppSpacing.lgAll,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip('All', null),
-                    const SizedBox(width: AppSpacing.sm),
-                    _buildFilterChip('Pending', LeaveStatus.pending),
-                    const SizedBox(width: AppSpacing.sm),
-                    _buildFilterChip('Approved', LeaveStatus.approved),
-                    const SizedBox(width: AppSpacing.sm),
-                    _buildFilterChip('Rejected', LeaveStatus.rejected),
-                  ],
-                ),
-              ),
+    return AppScreenScaffold(
+      title: 'Leave Management',
+      child: Column(
+        children: [
+          const SizedBox(height: AppSpacing.md),
+          // Filter Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip('All', null),
+                const SizedBox(width: AppSpacing.sm),
+                _buildFilterChip('Pending', LeaveStatus.pending),
+                const SizedBox(width: AppSpacing.sm),
+                _buildFilterChip('Approved', LeaveStatus.approved),
+                const SizedBox(width: AppSpacing.sm),
+                _buildFilterChip('Rejected', LeaveStatus.rejected),
+              ],
             ),
+          ),
+          const SizedBox(height: AppSpacing.md),
 
-            // Leave List
-            Expanded(
-              child: filteredLeaves.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: AppSpacing.lgAll,
-                      itemCount: filteredLeaves.length,
-                      itemBuilder: (context, index) {
-                        return _buildLeaveCard(filteredLeaves[index]);
-                      },
-                    ),
-            ),
-          ],
-        ),
+          // Leave List
+          Expanded(
+            child: filteredLeaves.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    itemCount: filteredLeaves.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: _buildLeaveCard(filteredLeaves[index]),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -125,25 +126,11 @@ class _AdminLeaveScreenState extends State<AdminLeaveScreen> {
   }
 
   Widget _buildLeaveCard(LeaveRequest leave) {
-    return Container(
+    return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => _showLeaveDetail(leave),
-        borderRadius: AppRadius.mediumAll,
-        child: Padding(
-          padding: AppSpacing.lgAll,
-          child: Column(
+      padding: AppSpacing.lgAll,
+      onTap: () => _showLeaveDetail(leave),
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -208,8 +195,6 @@ class _AdminLeaveScreenState extends State<AdminLeaveScreen> {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 

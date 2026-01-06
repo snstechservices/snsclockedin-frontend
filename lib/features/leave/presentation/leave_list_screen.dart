@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/core/ui/app_card.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/features/leave/application/leave_store.dart';
 import 'package:sns_clocked_in/features/leave/domain/leave_request.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -33,31 +35,25 @@ class _LeaveListScreenState extends State<LeaveListScreen> {
     final leaveStore = context.watch<LeaveStore>();
     final userLeaves = leaveStore.getLeaveRequestsByUserId(appState.userId ?? 'current_user');
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: userLeaves.isEmpty
-            ? _buildEmptyState()
-            : SingleChildScrollView(
-                padding: AppSpacing.lgAll,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'My Leave Requests',
-                      style: AppTypography.lightTextTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    ...userLeaves.map((leave) => _buildLeaveCard(leave)),
-                  ],
-                ),
-              ),
-      ),
+    return AppScreenScaffold(
+      title: 'My Leave Requests',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/e/leave/apply'),
         icon: const Icon(Icons.add),
         label: const Text('Apply Leave'),
       ),
+      child: userLeaves.isEmpty
+          ? _buildEmptyState()
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: AppSpacing.lg),
+                  ...userLeaves.map((leave) => _buildLeaveCard(leave)),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+              ),
+            ),
     );
   }
 
@@ -99,19 +95,8 @@ class _LeaveListScreenState extends State<LeaveListScreen> {
   }
 
   Widget _buildLeaveCard(LeaveRequest leave) {
-    return Container(
+    return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       padding: AppSpacing.lgAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

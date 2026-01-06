@@ -17,6 +17,148 @@ Each entry includes:
 
 ## Recent Changes
 
+### [Date: TBD] - Reusable UI Components & Admin Dashboard Refactoring
+
+**Status:** Complete  
+**Component:** UI Components & Admin Dashboard
+
+**Description:**
+Created reusable UI components to improve code consistency and maintainability, then refactored the admin dashboard to use these components:
+- Created `AppScreenScaffold` for consistent screen layouts
+- Created `AppCard` for consistent card styling
+- Created `SectionHeader` for consistent section titles
+- Refactored admin dashboard to use new components
+- Reduced code duplication and improved maintainability
+
+**Files Created/Modified:**
+
+#### 1. `lib/core/ui/app_screen_scaffold.dart` (85 lines) - NEW
+**Purpose:** Reusable screen scaffold with consistent styling
+
+**Key Features:**
+- Consistent background color (`AppColors.background`)
+- SafeArea handling
+- Optional AppBar with title and actions
+- Default horizontal padding (24px)
+- Support for floatingActionButton and bottomNavigationBar
+- Optional back button with automatic navigation
+
+**API:**
+```dart
+AppScreenScaffold(
+  title: 'Dashboard',           // Optional: shows AppBar
+  showBack: true,                // Optional: shows back button
+  actions: [IconButton(...)],    // Optional: action buttons
+  floatingActionButton: FAB(),   // Optional: FAB
+  child: YourContent(),
+)
+```
+
+**Implementation Details:**
+- AppBar only shown if title, showBack, or actions are provided
+- Back button uses `context.pop()` for navigation
+- AppBar uses design system typography for title
+- Background color matches design system
+
+#### 2. `lib/core/ui/app_card.dart` (75 lines) - NEW
+**Purpose:** Reusable card widget with consistent styling
+
+**Key Features:**
+- White background (`AppColors.surface`)
+- Rounded corners (`AppRadius.mediumAll`)
+- Soft shadow (0.06 alpha, 8px blur, 2px offset)
+- Optional tap handling with InkWell ripple effect
+- Optional width constraint
+- Flexible padding and margin
+
+**API:**
+```dart
+AppCard(
+  padding: AppSpacing.lgAll,    // Optional: internal padding
+  margin: EdgeInsets.all(8),      // Optional: external margin
+  width: 200,                    // Optional: width constraint
+  onTap: () {},                  // Optional: enables tap ripple
+  child: YourContent(),
+)
+```
+
+**Implementation Details:**
+- InkWell only wraps card if `onTap` is provided
+- Shadow uses consistent design system values
+- Border radius matches design system medium radius (12dp)
+
+#### 3. `lib/core/ui/section_header.dart` (29 lines) - NEW
+**Purpose:** Reusable section header widget
+
+**Key Features:**
+- Consistent typography (`AppTypography.lightTextTheme.labelLarge`)
+- Consistent spacing (bottom padding: `AppSpacing.md`)
+- Simple API for section titles
+
+**API:**
+```dart
+SectionHeader('Actions')
+```
+
+**Implementation Details:**
+- Uses design system labelLarge typography
+- Bottom padding of 16dp (medium spacing)
+
+#### 4. `lib/features/admin/dashboard/presentation/admin_dashboard_screen.dart` (Updated: 470 → 458 lines)
+**Refactoring Changes:**
+- Replaced custom `Scaffold` with `AppScreenScaffold`
+- Replaced custom `Container` cards with `AppCard` components
+- Replaced custom section titles with `SectionHeader` component
+- Removed duplicate card decoration code
+- Improved code consistency and maintainability
+
+**Before:**
+```dart
+Scaffold(
+  backgroundColor: AppColors.background,
+  body: SafeArea(
+    child: SingleChildScrollView(
+      padding: AppSpacing.lgAll,
+      ...
+    ),
+  ),
+)
+Container(
+  decoration: BoxDecoration(
+    color: AppColors.surface,
+    borderRadius: AppRadius.mediumAll,
+    boxShadow: [...],
+  ),
+  ...
+)
+```
+
+**After:**
+```dart
+AppScreenScaffold(
+  floatingActionButton: kDebugMode ? _buildDebugFAB(context) : null,
+  child: SingleChildScrollView(...),
+)
+AppCard(
+  padding: AppSpacing.lgAll,
+  child: ...
+)
+```
+
+**Additional Changes:**
+- Debug FAB changed to `FloatingActionButton.small` with bottom padding (72px)
+- Uses `SectionHeader` for "Actions" section title
+- All cards now use `AppCard` for consistency
+
+**Benefits:**
+1. **Code Reusability:** Components can be used across all screens
+2. **Consistency:** All screens will have consistent styling
+3. **Maintainability:** Design changes only need to be made in one place
+4. **Reduced Code:** Less duplicate code in individual screens
+5. **Type Safety:** Components enforce design system usage
+
+---
+
 ### [Date: TBD] - Enhanced Navigation with "More" Pattern
 
 **Status:** Complete  
@@ -123,17 +265,19 @@ Full admin dashboard screen implementation with:
 - Role switching functionality in debug menu
 - Entrance animations for UI elements
 - Professional card-based layout with design system tokens
+- **Refactored to use reusable UI components** (see "Reusable UI Components" entry)
 
 **Files Created/Modified:**
-- `lib/features/admin/dashboard/presentation/admin_dashboard_screen.dart` (470 lines)
+- `lib/features/admin/dashboard/presentation/admin_dashboard_screen.dart` (458 lines, reduced from 470)
   - Complete dashboard implementation
   - Mock data: admin name, company name, employee count, leave count, approvals, attendance percentage
   - Header card with welcome message and role chips
   - Summary grid with 4 metric cards
   - Action section with primary "My Attendance" button and secondary action cards
   - Overview placeholder section
-  - Debug FAB (floating action button) in debug mode
+  - Debug FAB (small floating action button) in debug mode
   - Debug menu sheet with role switching capabilities
+  - **Uses `AppScreenScaffold`, `AppCard`, and `SectionHeader` components**
 
 **Key Features:**
 - Uses `Entrance` widget for fade + slide animations
@@ -141,12 +285,13 @@ Full admin dashboard screen implementation with:
 - Design system integration (`AppColors`, `AppTypography`, `AppSpacing`, `AppRadius`)
 - Debug menu allows switching between Employee, Admin, and Super Admin roles
 - Role switching ensures authentication state is maintained
+- **Reusable components for consistent styling**
 
 **Navigation:**
 - Primary action: "My Attendance" → `/a/attendance`
 - Secondary actions:
   - Employees → `/a/employees`
-  - Leave → `/a/attendance` (note: may need update to `/a/leave`)
+  - Leave → `/a/leave` (updated from `/a/attendance`)
   - Reports → `/a/reports`
 
 **Technical Details:**
@@ -155,6 +300,9 @@ Full admin dashboard screen implementation with:
 - Debug menu uses `AppState` for role management
 - SnackBar feedback on role switch
 - Automatic navigation to `/home` after role switch (router handles role-based redirect)
+- **Refactored to use `AppScreenScaffold` instead of custom Scaffold**
+- **All cards use `AppCard` component for consistency**
+- **Section headers use `SectionHeader` component**
 
 ---
 

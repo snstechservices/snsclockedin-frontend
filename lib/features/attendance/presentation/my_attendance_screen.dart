@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/role/role.dart';
+import 'package:sns_clocked_in/core/ui/app_card.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/features/attendance/application/attendance_store.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
 import 'package:sns_clocked_in/design_system/app_radius.dart';
@@ -60,32 +62,30 @@ class MyAttendanceScreen extends StatelessWidget {
       ),
     ];
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.lgAll,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Today Status Card
-              _buildStatusCard(context, clockStatus),
+    return AppScreenScaffold(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: AppSpacing.lg),
+            // Today Status Card
+            _buildStatusCard(context, clockStatus),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Primary CTA
+            _buildPrimaryCTA(context, clockStatus, attendanceStore),
+            const SizedBox(height: AppSpacing.md),
+
+            // Secondary Actions
+            if (clockStatus == ClockStatus.clockedIn) ...[
+              _buildSecondaryActions(context, attendanceStore),
               const SizedBox(height: AppSpacing.lg),
-
-              // Primary CTA
-              _buildPrimaryCTA(context, clockStatus, attendanceStore),
-              const SizedBox(height: AppSpacing.md),
-
-              // Secondary Actions
-              if (clockStatus == ClockStatus.clockedIn) ...[
-                _buildSecondaryActions(context, attendanceStore),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-
-              // Timesheet Preview
-              _buildTimesheetPreview(context, timesheetEntries),
             ],
-          ),
+
+            // Timesheet Preview
+            _buildTimesheetPreview(context, timesheetEntries),
+            const SizedBox(height: AppSpacing.lg),
+          ],
         ),
       ),
     );
@@ -114,18 +114,7 @@ class MyAttendanceScreen extends StatelessWidget {
         break;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
       padding: AppSpacing.lgAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,18 +254,7 @@ class MyAttendanceScreen extends StatelessWidget {
     BuildContext context,
     List<TimesheetEntry> timesheetEntries,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mediumAll,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
       padding: AppSpacing.lgAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

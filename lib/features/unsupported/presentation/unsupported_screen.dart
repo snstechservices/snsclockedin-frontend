@@ -15,7 +15,7 @@ class UnsupportedScreen extends StatelessWidget {
 
     return AppScreenScaffold(
       title: 'Not supported on mobile',
-      body: Column(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

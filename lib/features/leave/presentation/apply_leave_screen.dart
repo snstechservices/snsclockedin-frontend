@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/core/ui/app_card.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/features/leave/application/leave_store.dart';
 import 'package:sns_clocked_in/features/leave/domain/leave_request.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -34,28 +36,16 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Apply Leave',
-          style: AppTypography.lightTextTheme.headlineMedium,
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.lgAll,
-          child: Form(
+    return AppScreenScaffold(
+      title: 'Apply Leave',
+      showBack: true,
+      child: SingleChildScrollView(
+        child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: AppSpacing.lg),
                 // Leave Type Dropdown
                 _buildSectionTitle('Leave Type'),
                 const SizedBox(height: AppSpacing.sm),
@@ -147,11 +137,11 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                   ),
                   child: const Text('Submit Leave Request'),
                 ),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
         ),
-      ),
     );
   }
 
