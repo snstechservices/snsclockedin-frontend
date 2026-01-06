@@ -203,7 +203,9 @@ class AppRouter {
           pageBuilder: (context, state) => _buildTransitionPage(
             context: context,
             state: state,
-            child: const ApplyLeaveScreen(),
+            child: const EmployeeShell(
+              child: ApplyLeaveScreen(),
+            ),
           ),
         ),
         GoRoute(

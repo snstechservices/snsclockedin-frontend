@@ -252,7 +252,8 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
           onChanged: (value) {
             setState(() {
               _isHalfDay = value ?? false;
-              if (!_isHalfDay) {
+              // When half-day is checked, set end date to start date
+              if (_isHalfDay) {
                 _endDate = _startDate;
               }
             });

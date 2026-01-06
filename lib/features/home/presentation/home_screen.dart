@@ -10,52 +10,46 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('SNS Clocked In'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () {
-              // Clear auth state - router will handle navigation
-              context.read<AppState>().logout();
-            },
+    return AppScreenScaffold(
+      title: 'Welcome to SNS Clocked In',
+      subtitle: 'Foundation setup complete! Ready for feature implementation.',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Logout',
+          onPressed: () {
+            // Clear auth state - router will handle navigation
+            context.read<AppState>().logout();
+          },
+        ),
+      ],
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 100,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: AppSpacing.xl * 2),
+          AppSurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Next Steps (Step 2+):',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.m),
+                _buildBulletPoint(context, 'Implement authentication flow'),
+                _buildBulletPoint(context, 'Add time tracking features'),
+                _buildBulletPoint(context, 'Integrate with backend API'),
+                _buildBulletPoint(context, 'Add offline sync capability'),
+                _buildBulletPoint(context, 'Migrate old code features'),
+              ],
+            ),
           ),
         ],
-      ),
-      body: AppScreenScaffold(
-        title: 'Welcome to SNS Clocked In',
-        subtitle: 'Foundation setup complete! Ready for feature implementation.',
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 100,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: AppSpacing.xl * 2),
-            AppSurfaceCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Next Steps (Step 2+):',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.m),
-                  _buildBulletPoint(context, 'Implement authentication flow'),
-                  _buildBulletPoint(context, 'Add time tracking features'),
-                  _buildBulletPoint(context, 'Integrate with backend API'),
-                  _buildBulletPoint(context, 'Add offline sync capability'),
-                  _buildBulletPoint(context, 'Migrate old code features'),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

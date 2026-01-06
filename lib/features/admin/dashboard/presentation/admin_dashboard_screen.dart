@@ -42,7 +42,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               _buildSummaryGrid(),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
               Entrance(
                 delay: const Duration(milliseconds: 100),
                 child: _buildActions(),
@@ -54,14 +54,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
       ),
       floatingActionButton: kDebugMode ? _buildDebugFAB(context) : null,
+      floatingActionButtonLocation: kDebugMode
+          ? FloatingActionButtonLocation.endFloat
+          : null,
+    );
+  }
+
+  /// Reusable card widget with consistent styling
+  Widget _AppCard({
+    required Widget child,
+    double? width,
+  }) {
+    return Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.mediumAll,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 
   Widget _buildHeaderCard() {
-    return Container(
-      decoration: _cardDecoration(),
-      padding: AppSpacing.lgAll,
-      child: Column(
+    return _AppCard(
+      child: Padding(
+        padding: AppSpacing.lgAll,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -107,6 +132,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -181,21 +207,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     IconData icon,
     double width,
   ) {
-    return Container(
+    return _AppCard(
       width: width,
-      padding: AppSpacing.lgAll,
-      decoration: _cardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: AppColors.primary),
+              Icon(icon, color: AppColors.primary, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   title,
-                  style: AppTypography.lightTextTheme.bodySmall,
+                  style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -225,31 +252,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           icon: Icons.access_time,
           onTap: () => context.go('/a/attendance'),
         ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
+        const SizedBox(height: AppSpacing.lg),
+        // 2-column grid: Row 1 (Employees, Leave), Row 2 (Reports full width)
+        Column(
           children: [
-            Expanded(
-              child: _secondaryActionCard(
-                label: 'Employees',
-                icon: Icons.people_outline,
-                onTap: () => context.go('/a/employees'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _secondaryActionCard(
+                    label: 'Employees',
+                    icon: Icons.people_outline,
+                    onTap: () => context.go('/a/employees'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _secondaryActionCard(
+                    label: 'Leave',
+                    icon: Icons.calendar_today,
+                    onTap: () => context.go('/a/leave'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _secondaryActionCard(
-                label: 'Leave',
-                icon: Icons.calendar_today,
-                onTap: () => context.go('/a/leave'),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _secondaryActionCard(
-                label: 'Reports',
-                icon: Icons.bar_chart,
-                onTap: () => context.go('/a/reports'),
-              ),
+            const SizedBox(height: AppSpacing.md),
+            _secondaryActionCard(
+              label: 'Reports',
+              icon: Icons.bar_chart,
+              onTap: () => context.go('/a/reports'),
             ),
           ],
         ),
@@ -303,9 +333,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return InkWell(
       onTap: onTap,
       borderRadius: AppRadius.mediumAll,
-      child: Container(
-        padding: AppSpacing.lgAll,
-        decoration: _cardDecoration(),
+      child: _AppCard(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -317,6 +345,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -325,47 +355,37 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildOverviewPlaceholder() {
-    return Container(
-      decoration: _cardDecoration(),
-      padding: AppSpacing.xlAll,
-      child: Column(
-        children: [
-          Icon(Icons.show_chart, size: 48, color: AppColors.textSecondary),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Overview',
-            style: AppTypography.lightTextTheme.labelLarge,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Reports and charts will appear here',
-            style: AppTypography.lightTextTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
+    return _AppCard(
+      child: Padding(
+        padding: AppSpacing.xlAll,
+        child: Column(
+          children: [
+            Icon(Icons.show_chart, size: 48, color: AppColors.textSecondary),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Overview',
+              style: AppTypography.lightTextTheme.labelLarge,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Reports and charts will appear here',
+              style: AppTypography.lightTextTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  BoxDecoration _cardDecoration() {
-    return BoxDecoration(
-      color: AppColors.surface,
-      borderRadius: AppRadius.mediumAll,
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.06),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    );
-  }
-
   Widget? _buildDebugFAB(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => _showDebugMenu(context),
-      backgroundColor: AppColors.primary,
-      child: const Icon(Icons.bug_report, color: Colors.white),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 72),
+      child: FloatingActionButton.small(
+        onPressed: () => _showDebugMenu(context),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.bug_report, color: Colors.white, size: 20),
+      ),
     );
   }
 
