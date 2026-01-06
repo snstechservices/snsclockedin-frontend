@@ -124,23 +124,27 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return AppScreenScaffold(
-      // Keep splash minimal - no header/footer
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final theme = Theme.of(context);
-          final primaryColor = theme.colorScheme.primary;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-          return Center(
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          height: double.infinity,
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Full App Logo with responsive sizing and pulse animation
                 ScaleTransition(
                   scale: _pulseAnimation,
                   child: _buildFullLogo(),
                 ),
-                SizedBox(height: constraints.maxHeight * 0.05),
+                SizedBox(height: screenHeight * 0.05),
                 // Loading indicator - optimized for smooth animation
                 RepaintBoundary(
                   child: SizedBox(
@@ -152,7 +156,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                 ),
-                SizedBox(height: constraints.maxHeight * 0.025),
+                SizedBox(height: screenHeight * 0.025),
                 // Subtle loading text
                 Text(
                   'Loading...',
@@ -164,8 +168,8 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

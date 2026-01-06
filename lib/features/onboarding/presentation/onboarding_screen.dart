@@ -72,7 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScreenScaffold(
-      // keep top area clean; header provides the Skip button
+      // Header: Skip button aligned to the right
       header: Padding(
         padding: AppSpacing.mdAll,
         child: Row(
@@ -91,19 +91,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ],
         ),
       ),
-      // Main content: logo + pageview
+      // Main content: pageview
       body: LayoutBuilder(
         builder: (context, constraints) {
           final pageViewHeight = (constraints.maxHeight * 0.5).clamp(300.0, 520.0);
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Logo section (only on first page)
-              _buildLogo(_currentPage),
-
-              // spacing
-              SizedBox(height: _currentPage == 0 ? AppSpacing.md : 0),
-
               SizedBox(
                 height: pageViewHeight,
                 child: PageView.builder(
@@ -162,39 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildLogo(int currentPage) {
-    // Show full logo only on first page, no logo on pages 2 and 3
-    if (currentPage == 0) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xl,
-          vertical: AppSpacing.lg,
-        ),
-        child: Image.asset(
-          'assets/images/splash_logo.png',
-          height: 90,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return Image.asset(
-              'assets/images/app_log.png',
-              height: 90,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error2, stackTrace2) {
-                return const Icon(
-                  Icons.access_time,
-                  size: 90,
-                  color: AppColors.primary,
-                );
-              },
-            );
-          },
-        ),
-      );
-    } else {
-      // No logo on pages 2 and 3 - use shrink to maintain layout stability
-      return const SizedBox.shrink();
-    }
-  }
+  // Logo moved to scaffold header to keep top area consistent across pages.
 
   Widget _buildPage(OnboardingPage page) {
     return AnimatedSwitcher(
