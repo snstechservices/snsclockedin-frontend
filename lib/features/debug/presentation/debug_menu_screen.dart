@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:sns_clocked_in/core/role/role.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
-import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/core/ui/app_surface_card.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
 import 'package:sns_clocked_in/design_system/app_radius.dart';
@@ -62,6 +62,20 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
     _showSnackBar('Onboarding marked as seen');
   }
 
+  Future<void> _switchRole(Role role) async {
+    final appState = context.read<AppState>();
+    
+    // Ensure user is authenticated when switching roles
+    if (!appState.isAuthenticated) {
+      await appState.loginMock(role: role);
+    } else {
+      appState.setRole(role);
+    }
+    
+    _showSnackBar('Role switched to ${role.value}');
+    context.go('/home');
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!kDebugMode) {
@@ -85,10 +99,11 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
         foregroundColor: Colors.white,
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: AppScreenScaffold(
-        topPadding: AppSpacing.lg,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: AppSpacing.lgAll,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Current values section
             AppSurfaceCard(
@@ -163,7 +178,45 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
               onPressed: _markOnboardingSeen,
               backgroundColor: AppColors.success,
             ),
-          ],
+            const SizedBox(height: AppSpacing.xl),
+
+            // Role Testing
+            Text(
+              'Role Testing',
+              style: AppTypography.lightTextTheme.headlineMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppSurfaceCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStatusRow(
+                    'Current Role',
+                    appState.currentRole.value,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildActionButton(
+                    label: 'Switch to Employee',
+                    icon: Icons.person,
+                    onPressed: () => _switchRole(Role.employee),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildActionButton(
+                    label: 'Switch to Admin',
+                    icon: Icons.admin_panel_settings,
+                    onPressed: () => _switchRole(Role.admin),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildActionButton(
+                    label: 'Switch to Super Admin',
+                    icon: Icons.supervisor_account,
+                    onPressed: () => _switchRole(Role.superAdmin),
+                  ),
+                ],
+              ),
+            ),
+            ],
+          ),
         ),
       ),
     );

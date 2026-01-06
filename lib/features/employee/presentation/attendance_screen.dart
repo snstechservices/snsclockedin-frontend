@@ -1,0 +1,43 @@
+import 'package:flutter/material.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
+import 'package:sns_clocked_in/design_system/app_colors.dart';
+import 'package:sns_clocked_in/design_system/app_typography.dart';
+
+/// Employee attendance screen
+class EmployeeAttendanceScreen extends StatelessWidget {
+  const EmployeeAttendanceScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScreenScaffold(
+      title: 'Attendance',
+      body: _buildComingSoonPlaceholder(
+        context,
+        Icons.access_time,
+      ),
+    );
+  }
+
+  Widget _buildComingSoonPlaceholder(BuildContext context, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: AppColors.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Coming soon',
+            style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

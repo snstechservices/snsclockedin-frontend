@@ -1,135 +1,133 @@
 import 'package:flutter/material.dart';
-import 'package:sns_clocked_in/core/ui/entrance.dart';
-import 'package:sns_clocked_in/core/ui/motion.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
+import 'package:sns_clocked_in/design_system/app_radius.dart';
 import 'package:sns_clocked_in/design_system/app_spacing.dart';
-/// AppScreenScaffold (aka ScreenShell)
+import 'package:sns_clocked_in/design_system/app_typography.dart';
+
+/// Reusable screen scaffold with title, subtitle, and card-wrapped content
 ///
-/// Reusable screen wrapper providing:
-/// - consistent background color
-/// - safe area handling
-/// - responsive centered content with max width
-/// - optional header, footer, and enter animation
+/// Provides:
+/// - Consistent background (AppColors.background)
+/// - SafeArea handling
+/// - Title and optional subtitle using design system typography
+/// - Content area in white card with shadow and rounded corners
+/// - Responsive max width (560px) with center alignment
+/// - Optional back button and action buttons
 class AppScreenScaffold extends StatelessWidget {
   const AppScreenScaffold({
     super.key,
-    // Backwards compatible: callers may still pass `child`.
-    this.child,
-    this.header,
-    this.body,
-    this.footer,
-    this.maxWidth = 460.0,
-    this.topPadding = AppSpacing.xl,
-    this.bottomPadding = AppSpacing.md,
-    this.extendBodyBehindAppBar = false,
-    this.scroll = true,
-    this.centerContent = true,
-    this.animate = true,
-  }) : assert(body != null || child != null, 'Either body or child must be provided');
+    required this.title,
+    this.subtitle,
+    required this.body,
+    this.actions,
+    this.showBack = false,
+    this.padding = AppSpacing.lgAll,
+  });
 
-  /// Backwards-compatible single child parameter
-  final Widget? child;
+  /// Screen title
+  final String title;
 
-  /// Optional header pinned above the body
-  final Widget? header;
+  /// Optional subtitle below title
+  final String? subtitle;
 
-  /// Preferred body widget (use this going forward)
-  final Widget? body;
+  /// Main content widget (wrapped in card)
+  final Widget body;
 
-  /// Optional footer pinned near bottom
-  final Widget? footer;
+  /// Optional action buttons in app bar
+  final List<Widget>? actions;
 
-  /// Maximum width for centered content
-  final double maxWidth;
+  /// Show back button (default: false)
+  final bool showBack;
 
-  /// Top padding added inside SafeArea
-  final double topPadding;
-
-  /// Bottom padding added (plus keyboard insets)
-  final double bottomPadding;
-
-  /// Whether to extend body behind app bar
-  final bool extendBodyBehindAppBar;
-
-  /// If true, the content scrolls when needed
-  final bool scroll;
-
-  /// If true, content will be centered horizontally (and vertically via layout)
-  final bool centerContent;
-
-  /// Enable entrance motion for the main body
-  final bool animate;
+  /// Padding for the content card (default: AppSpacing.lgAll)
+  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    const baseHorizontal = 24.0;
-    final leftPad = baseHorizontal + media.padding.left;
-    final rightPad = baseHorizontal + media.padding.right;
-    final availableWidth = (media.size.width - leftPad - rightPad).clamp(0.0, double.infinity);
-    final contentMaxWidth = availableWidth > maxWidth ? maxWidth : availableWidth;
-
-    final Widget contentWidget = body ?? child!;
-
-    Widget bodyContent = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: contentMaxWidth),
-      child: contentWidget,
-    );
-
-    if (animate && !Motion.reducedMotion(context)) {
-      bodyContent = Entrance(child: bodyContent);
-    }
-
     return Scaffold(
-      extendBodyBehindAppBar: extendBodyBehindAppBar,
-      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
+      appBar: _buildAppBar(context),
       body: SafeArea(
-        // allow top area control to caller via header spacing
-        top: false,
-        left: false,
-        right: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final minHeight = constraints.maxHeight;
-
-            return SingleChildScrollView(
-              physics: scroll ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: minHeight),
-                child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      leftPad,
-                      media.padding.top + topPadding,
-                      rightPad,
-                      media.viewInsets.bottom + bottomPadding,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (header != null) header!,
-
-                        // Main content: do not use flex inside a scrollable — use alignment instead
-                        centerContent
-                            ? Align(alignment: Alignment.topCenter, child: bodyContent)
-                            : Align(alignment: Alignment.topLeft, child: bodyContent),
-
-                        if (footer != null) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          footer!,
-                          SizedBox(height: media.padding.bottom > 0 ? 0 : bottomPadding),
-                        ],
-                      ],
-                    ),
-                  ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: SingleChildScrollView(
+              padding: AppSpacing.lgAll,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title section
+                  _buildTitleSection(context),
+                  const SizedBox(height: AppSpacing.lg),
+                  // Content card
+                  _buildContentCard(context),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
   }
-}
 
+  PreferredSizeWidget? _buildAppBar(BuildContext context) {
+    if (!showBack && (actions == null || actions!.isEmpty)) {
+      return null;
+    }
+
+    return AppBar(
+      backgroundColor: AppColors.background,
+      elevation: 0,
+      leading: showBack
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.pop(),
+            )
+          : null,
+      actions: actions,
+    );
+  }
+
+  Widget _buildTitleSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTypography.lightTextTheme.headlineMedium,
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle!,
+            style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildContentCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.largeAll,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: padding,
+        child: body,
+      ),
+    );
+  }
+}

@@ -26,27 +26,15 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: AppScreenScaffold(
-        child: Column(
+        title: 'Welcome to SNS Clocked In',
+        subtitle: 'Foundation setup complete! Ready for feature implementation.',
+        body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.check_circle_outline,
               size: 100,
               color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Text(
-              'Welcome to SNS Clocked In',
-              style: Theme.of(context).textTheme.headlineMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.l),
-            Text(
-              'Foundation setup complete!\nReady for feature implementation.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-              textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl * 2),
             AppSurfaceCard(

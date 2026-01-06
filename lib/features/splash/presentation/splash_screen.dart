@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
-// removed unused imports
-import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

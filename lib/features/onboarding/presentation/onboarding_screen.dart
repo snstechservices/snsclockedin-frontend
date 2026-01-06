@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
-import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/core/ui/motion.dart';
 import 'package:sns_clocked_in/core/ui/pressable_scale.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -71,86 +70,94 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScreenScaffold(
-      // Header: Skip button aligned to the right
-      header: Padding(
-        padding: AppSpacing.mdAll,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: _handleSkip,
-              child: Text(
-                'Skip',
-                style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      // Main content: pageview
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final pageViewHeight = (constraints.maxHeight * 0.5).clamp(300.0, 520.0);
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: pageViewHeight,
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: _onPageChanged,
-                  itemCount: _pages.length,
-                  itemBuilder: (context, index) {
-                    return _buildPage(_pages[index]);
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-      // Dots and Next/Get Started pinned near bottom
-      footer: Padding(
-        padding: AppSpacing.xlAll,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (index) => _buildDot(index == _currentPage),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            PressableScale(
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _handleNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: AppRadius.mediumAll,
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final pageViewHeight = (constraints.maxHeight * 0.5).clamp(300.0, 520.0);
+            return SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  children: [
+                    // Header: Skip button aligned to the right
+                    Padding(
+                      padding: AppSpacing.mdAll,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: _handleSkip,
+                            child: Text(
+                              'Skip',
+                              style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
-                    style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                    // Main content: pageview
+                    SizedBox(
+                      height: pageViewHeight,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        onPageChanged: _onPageChanged,
+                        itemCount: _pages.length,
+                        itemBuilder: (context, index) {
+                          return _buildPage(_pages[index]);
+                        },
+                      ),
                     ),
-                  ),
+                    // Dots and Next/Get Started pinned near bottom
+                    Padding(
+                      padding: AppSpacing.xlAll,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              _pages.length,
+                              (index) => _buildDot(index == _currentPage),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+                          PressableScale(
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: _handleNext,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: AppRadius.mediumAll,
+                                  ),
+                                ),
+                                child: Text(
+                                  _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                                  style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -239,7 +246,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 }
 
 class OnboardingPage {
-  OnboardingPage({
+  const OnboardingPage({
     required this.title,
     required this.description,
     required this.icon,

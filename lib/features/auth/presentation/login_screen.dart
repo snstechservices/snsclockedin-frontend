@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
-import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/core/ui/app_surface_card.dart';
 import 'package:sns_clocked_in/core/ui/motion.dart';
 import 'package:sns_clocked_in/core/ui/pressable_scale.dart';
@@ -156,15 +155,26 @@ class _LoginScreenState extends State<LoginScreen> {
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
-      child: AppScreenScaffold(
+      child: Scaffold(
         extendBodyBehindAppBar: true,
-        footer: _buildFooter(),
-        child: Column(
-          children: [
-            _buildAnimatedHeader(),
-            const SizedBox(height: AppSpacing.xl),
-            _buildAnimatedLoginForm(),
-          ],
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Column(
+                children: [
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                  _buildAnimatedHeader(),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildAnimatedLoginForm(),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                  _buildFooter(),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
