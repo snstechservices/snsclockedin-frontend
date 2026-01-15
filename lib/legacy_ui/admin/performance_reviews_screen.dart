@@ -1,0 +1,518 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/feature_provider.dart';
+import '../../models/performance_review.dart';
+import '../../services/performance_review_service.dart';
+import '../../services/api_service.dart';
+import '../../widgets/admin_side_navigation.dart';
+import 'performance_review_templates_dialog.dart';
+import 'create_performance_review_dialog.dart';
+import 'performance_review_details_screen.dart';
+import '../../config/api_config.dart';
+import '../../utils/logger.dart';
+import '../../services/global_notification_service.dart';
+
+class PerformanceReviewsScreen extends StatefulWidget {
+  const PerformanceReviewsScreen({super.key});
+
+  @override
+  State<PerformanceReviewsScreen> createState() =>
+      _PerformanceReviewsScreenState();
+}
+
+class _PerformanceReviewsScreenState extends State<PerformanceReviewsScreen> {
+  late PerformanceReviewService _performanceReviewService;
+  List<PerformanceReview> _reviews = [];
+  bool _isLoading = true;
+  String _selectedFilter = 'all';
+  Map<String, dynamic> _statistics = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFeatureAccess();
+    _initializeService();
+    _loadData();
+  }
+
+  void _initializeService() {
+    final apiService = ApiService(baseUrl: ApiConfig.baseUrl);
+    _performanceReviewService = PerformanceReviewService(apiService);
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Load reviews and statistics in parallel
+      final results = await Future.wait([
+        _performanceReviewService.getPerformanceReviews(),
+        _performanceReviewService.getPerformanceStatistics(),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _reviews = results[0] as List<PerformanceReview>;
+          _statistics = results[1] as Map<String, dynamic>;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      Logger.error('Error loading performance reviews: $e');
+      if (mounted) {
+        setState(() {
+          _reviews = [];
+          _statistics = {
+            'total': 0,
+            'completed': 0,
+            'inProgress': 0,
+            'overdue': 0,
+            'averageRating': 0.0,
+          };
+          _isLoading = false;
+        });
+
+        GlobalNotificationService().showError(
+          'Failed to load performance reviews: ${e.toString()}',
+        );
+      }
+    }
+  }
+
+  void _checkFeatureAccess() {
+    final featureProvider = Provider.of<FeatureProvider>(
+      context,
+      listen: false,
+    );
+    if (!featureProvider.hasPerformanceReviews) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacementNamed('/admin/dashboard');
+        GlobalNotificationService().showWarning(
+          'Performance Reviews feature is not available in your current plan',
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        return Consumer<FeatureProvider>(
+          builder: (context, featureProvider, child) {
+            if (!featureProvider.hasPerformanceReviews) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Performance Reviews'),
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              drawer: const AdminSideNavigation(
+                currentRoute: '/performance_reviews',
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Section
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.assessment,
+                              size: 40,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Performance Reviews',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Manage employee performance evaluations and feedback',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Quick Actions
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              _showCreateReviewDialog();
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text('Create Review'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    const PerformanceReviewTemplatesDialog(),
+                              );
+                            },
+                            icon: const Icon(Icons.description),
+                            label: const Text('Templates'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[600],
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Statistics Cards
+                    if (_statistics.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Total Reviews',
+                              '${_statistics['total'] ?? 0}',
+                              Icons.assessment,
+                              Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Completed',
+                              '${_statistics['completed'] ?? 0}',
+                              Icons.check_circle,
+                              Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'In Progress',
+                              '${_statistics['inProgress'] ?? 0}',
+                              Icons.pending,
+                              Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Overdue',
+                              '${_statistics['overdue'] ?? 0}',
+                              Icons.warning,
+                              Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
+                    // Filter Tabs
+                    Row(
+                      children: [
+                        Text(
+                          'Filter:',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _buildFilterChip('all', 'All'),
+                                _buildFilterChip('in_progress', 'In Progress'),
+                                _buildFilterChip('completed', 'Completed'),
+                                _buildFilterChip('overdue', 'Overdue'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Performance Reviews List
+                    Card(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Performance Reviews',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const Spacer(),
+                                if (_isLoading)
+                                  const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          _isLoading
+                              ? const Padding(
+                                  padding: EdgeInsets.all(32.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              : _filteredReviews.isEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.all(32.0),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.assessment_outlined,
+                                          size: 64,
+                                          color: Colors.grey[400],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'No Performance Reviews',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.copyWith(
+                                                color: Colors.grey[600],
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Create your first performance review to get started.',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Colors.grey[500],
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : Column(
+                                  children: _filteredReviews
+                                      .map((review) => _buildReviewCard(review))
+                                      .toList(),
+                                ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24), // Bottom padding for scroll
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  List<PerformanceReview> get _filteredReviews {
+    if (_selectedFilter == 'all') {
+      return _reviews;
+    }
+    return _reviews
+        .where((review) => review.status == _selectedFilter)
+        .toList();
+  }
+
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String value, String label) {
+    final isSelected = _selectedFilter == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: FilterChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (selected) {
+          setState(() {
+            _selectedFilter = value;
+          });
+        },
+        selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+        checkmarkColor: Theme.of(context).primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildReviewCard(PerformanceReview review) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12.0),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: review.statusColor,
+          child: Icon(
+            _getStatusIcon(review.status),
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          review.employeeName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Period: ${review.reviewPeriod}'),
+            Text('Reviewer: ${review.reviewerName}'),
+            if (review.overallRating != null)
+              Text('Rating: ${review.overallRating!.toStringAsFixed(1)}/5.0'),
+          ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: review.statusColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                review.statusDisplayName,
+                style: TextStyle(
+                  color: review.statusColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Due: ${_formatDate(review.dueDate)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        onTap: () => _showReviewDetails(review),
+        isThreeLine: true,
+      ),
+    );
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'draft':
+        return Icons.edit;
+      case 'in_progress':
+        return Icons.pending;
+      case 'completed':
+        return Icons.check_circle;
+      case 'overdue':
+        return Icons.warning;
+      default:
+        return Icons.assessment;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  void _showReviewDetails(PerformanceReview review) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            PerformanceReviewDetailsScreen(reviewId: review.id),
+      ),
+    );
+  }
+
+  void _showCreateReviewDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const CreatePerformanceReviewDialog(),
+    );
+
+    // Refresh data if a review was created successfully
+    if (result == true) {
+      _loadData();
+    }
+  }
+}

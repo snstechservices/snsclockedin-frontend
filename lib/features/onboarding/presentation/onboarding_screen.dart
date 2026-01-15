@@ -7,6 +7,7 @@ import 'package:sns_clocked_in/design_system/app_colors.dart';
 import 'package:sns_clocked_in/design_system/app_radius.dart';
 import 'package:sns_clocked_in/design_system/app_spacing.dart';
 import 'package:sns_clocked_in/design_system/app_typography.dart';
+import 'package:sns_clocked_in/core/ui/entrance.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -178,7 +179,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ).animate(CurvedAnimation(
               parent: animation,
               curve: Curves.easeOutCubic,
-            ),),
+            )),
             child: child,
           ),
         );
@@ -187,44 +188,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         key: ValueKey(page.title), // Key for AnimatedSwitcher
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
-          vertical: AppSpacing.lg, // Increased for better vertical rhythm
+          vertical: AppSpacing.lg,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Illustration placeholder (Icon)
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                page.icon,
-                size: 64,
-                color: AppColors.primary,
+            Entrance(
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  page.icon,
+                  size: 64,
+                  color: AppColors.primary,
+                ),
               ),
             ),
-            const SizedBox(height: AppSpacing.xl), // Fixed spacing for consistency
-
-            // Title
-            Text(
-              page.title,
-              style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
-                color: AppColors.primary,
+            const SizedBox(height: AppSpacing.xl),
+            Entrance(
+              delay: const Duration(milliseconds: 60),
+              child: Text(
+                page.title,
+                style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
+                  color: AppColors.primary,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSpacing.lg), // Increased from md
-
-            // Description
-            Text(
-              page.description,
-              style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
-                color: AppColors.textSecondary,
+            const SizedBox(height: AppSpacing.lg),
+            Entrance(
+              delay: const Duration(milliseconds: 120),
+              child: Text(
+                page.description,
+                style: AppTypography.lightTextTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),

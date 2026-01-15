@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/ui/app_card.dart';
 import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
-import 'package:sns_clocked_in/features/leave/application/leave_store.dart';
+import 'package:sns_clocked_in/core/ui/clickable_stat_card.dart';
+import 'package:sns_clocked_in/core/ui/primary_action_button.dart';
+import 'package:sns_clocked_in/features/leave/application/admin_leave_approvals_store.dart';
 import 'package:sns_clocked_in/features/leave/domain/leave_request.dart';
 import 'package:sns_clocked_in/features/notifications/application/notifications_store.dart';
 import 'package:sns_clocked_in/features/notifications/domain/app_notification.dart';
@@ -25,25 +28,137 @@ class _AdminLeaveScreenState extends State<AdminLeaveScreen> {
   @override
   void initState() {
     super.initState();
-    // Seed sample data on first load
+    // Only load if we don't have data (avoids API calls when we have seeded/cached data)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LeaveStore>().seedSampleData();
+      if (!mounted) return;
+      final store = context.read<AdminLeaveApprovalsStore>();
+      // Only load if we don't have data
+      if (store.pendingLeaves.isEmpty) {
+        store.loadPending();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final leaveStore = context.watch<LeaveStore>();
-    final filteredLeaves = leaveStore.getLeaveRequestsByStatus(_selectedFilter);
+    final store = context.watch<AdminLeaveApprovalsStore>();
+    final filteredLeaves = _selectedFilter == null
+        ? store.pendingLeaves
+        : store.pendingLeaves.where((l) => l.status == _selectedFilter).toList();
 
     return AppScreenScaffold(
-      title: 'Leave Management',
+      skipScaffold: true,
       child: Column(
         children: [
+          if (store.usingStale) _buildCacheHint(context),
           const SizedBox(height: AppSpacing.md),
+          // Summary Stat Cards Section (horizontal scrollable)
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.textSecondary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      'Leave Summary',
+                      style: AppTypography.lightTextTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 140,
+                        child: ClickableStatCard(
+                          title: 'Pending',
+                          value: store.pendingCount.toString(),
+                          icon: Icons.pending,
+                          color: AppColors.warning,
+                          isSelected: _selectedFilter == LeaveStatus.pending,
+                          onTap: () {
+                            setState(() {
+                              _selectedFilter = _selectedFilter == LeaveStatus.pending
+                                  ? null
+                                  : LeaveStatus.pending;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(
+                        width: 140,
+                        child: ClickableStatCard(
+                          title: 'Approved',
+                          value: store.approvedCount.toString(),
+                          icon: Icons.check_circle,
+                          color: AppColors.success,
+                          isSelected: _selectedFilter == LeaveStatus.approved,
+                          onTap: () {
+                            setState(() {
+                              _selectedFilter = _selectedFilter == LeaveStatus.approved
+                                  ? null
+                                  : LeaveStatus.approved;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(
+                        width: 140,
+                        child: ClickableStatCard(
+                          title: 'Rejected',
+                          value: store.rejectedCount.toString(),
+                          icon: Icons.cancel,
+                          color: AppColors.error,
+                          isSelected: _selectedFilter == LeaveStatus.rejected,
+                          onTap: () {
+                            setState(() {
+                              _selectedFilter = _selectedFilter == LeaveStatus.rejected
+                                  ? null
+                                  : LeaveStatus.rejected;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Primary Action Button
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: PrimaryActionButton(
+              label: 'Submit Admin Leave Request',
+              icon: Icons.add_circle_outline,
+              onPressed: () {
+                // Navigate to admin leave request screen or apply leave screen
+                context.go('/a/leave/apply');
+              },
+            ),
+          ),
           // Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
               children: [
                 _buildFilterChip('All', null),
@@ -60,17 +175,25 @@ class _AdminLeaveScreenState extends State<AdminLeaveScreen> {
 
           // Leave List
           Expanded(
-            child: filteredLeaves.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    itemCount: filteredLeaves.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: _buildLeaveCard(filteredLeaves[index]),
-                      );
-                    },
-                  ),
+            child: store.isLoading && filteredLeaves.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : store.error != null && filteredLeaves.isEmpty
+                    ? _buildErrorState(context, store)
+                    : filteredLeaves.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: () => store.loadPending(forceRefresh: true),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              itemCount: filteredLeaves.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                                  child: _buildLeaveCard(context, filteredLeaves[index], store),
+                                );
+                              },
+                            ),
+                          ),
           ),
         ],
       ),
@@ -125,76 +248,230 @@ class _AdminLeaveScreenState extends State<AdminLeaveScreen> {
     );
   }
 
-  Widget _buildLeaveCard(LeaveRequest leave) {
-    return AppCard(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: AppSpacing.lgAll,
-      onTap: () => _showLeaveDetail(leave),
-      child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCacheHint(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.1),
+        borderRadius: AppRadius.smAll,
+        border: Border.all(
+          color: AppColors.warning.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 16,
+            color: AppColors.warning,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Showing cached data',
+              style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, AdminLeaveApprovalsStore store) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: AppCard(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          leave.userName ?? 'Employee',
-                          style: AppTypography.lightTextTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          leave.leaveTypeDisplay,
-                          style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildStatusChip(leave.status),
-                ],
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: AppColors.error,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Failed to load leave requests',
+                style: AppTypography.lightTextTheme.titleMedium?.copyWith(
+                  color: AppColors.error,
+                ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '${_formatDate(leave.startDate)} - ${_formatDate(leave.endDate)}',
-                    style: AppTypography.lightTextTheme.bodyMedium,
-                  ),
-                  if (leave.isHalfDay) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xs,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: AppRadius.smAll,
-                      ),
-                      child: Text(
-                        leave.halfDayPart == HalfDayPart.am ? 'AM' : 'PM',
-                        style: AppTypography.lightTextTheme.bodySmall?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
               Text(
-                leave.daysDisplay,
-                style: AppTypography.lightTextTheme.bodySmall,
+                store.error ?? 'Unknown error',
+                style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              ElevatedButton.icon(
+                onPressed: store.isLoading
+                    ? null
+                    : () => store.loadPending(forceRefresh: true),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeaveCard(
+    BuildContext context,
+    LeaveRequest leave,
+    AdminLeaveApprovalsStore store,
+  ) {
+    final isLeaveLoading = store.isLeaveLoading(leave.id);
+    final isDisabled = store.isLoading || isLeaveLoading;
+
+    // Determine border color based on status
+    Color borderColor;
+    switch (leave.status) {
+      case LeaveStatus.pending:
+        borderColor = AppColors.warning;
+        break;
+      case LeaveStatus.approved:
+        borderColor = AppColors.success;
+        break;
+      case LeaveStatus.rejected:
+        borderColor = AppColors.error;
+        break;
+    }
+
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: AppSpacing.lgAll,
+      onTap: () => _showLeaveDetail(context, leave, store),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: borderColor,
+              width: 4,
+            ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        leave.userName ?? 'Employee',
+                        style: AppTypography.lightTextTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Employee',
+                        style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusChip(leave.status),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            // Date range with calendar icon
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  '${_formatDate(leave.startDate)} - ${_formatDate(leave.endDate)}',
+                  style: AppTypography.lightTextTheme.bodyMedium,
+                ),
+                if (leave.isHalfDay) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: AppRadius.smAll,
+                    ),
+                    child: Text(
+                      leave.halfDayPart == HalfDayPart.am ? 'AM' : 'PM',
+                      style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            // Duration with clock icon
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  leave.daysDisplay,
+                  style: AppTypography.lightTextTheme.bodySmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            // Leave type
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  leave.leaveTypeDisplay,
+                  style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            // Reason (if available)
+            if (leave.reason.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Reason: ${leave.reason}',
+                style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -239,127 +516,237 @@ class _AdminLeaveScreenState extends State<AdminLeaveScreen> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  void _showLeaveDetail(LeaveRequest leave) {
+  void _showLeaveDetail(
+    BuildContext context,
+    LeaveRequest leave,
+    AdminLeaveApprovalsStore store,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.large),
+        ),
       ),
-      builder: (context) => _LeaveDetailSheet(leave: leave),
+      builder: (context) => _LeaveDetailSheet(leave: leave, store: store),
     );
   }
 }
 
 class _LeaveDetailSheet extends StatelessWidget {
-  const _LeaveDetailSheet({required this.leave});
+  const _LeaveDetailSheet({
+    required this.leave,
+    required this.store,
+  });
 
   final LeaveRequest leave;
+  final AdminLeaveApprovalsStore store;
 
   @override
   Widget build(BuildContext context) {
-    final leaveStore = context.read<LeaveStore>();
 
     return SafeArea(
-      child: Padding(
-        padding: AppSpacing.lgAll,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Leave Request Details',
-              style: AppTypography.lightTextTheme.headlineMedium,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: AppSpacing.md),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.textSecondary.withValues(alpha: 0.3),
+              borderRadius: AppRadius.smAll,
             ),
-            const SizedBox(height: AppSpacing.lg),
-            _buildDetailRow('Employee', leave.userName ?? 'N/A'),
-            _buildDetailRow('Leave Type', leave.leaveTypeDisplay),
-            _buildDetailRow(
-              'Date Range',
-              '${_formatDate(leave.startDate)} - ${_formatDate(leave.endDate)}',
-            ),
-            if (leave.isHalfDay)
-              _buildDetailRow('Half Day', leave.halfDayPart == HalfDayPart.am ? 'AM' : 'PM'),
-            _buildDetailRow('Days', leave.daysDisplay),
-            _buildDetailRow('Status', leave.statusDisplay),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Reason',
-              style: AppTypography.lightTextTheme.labelLarge,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              leave.reason,
-              style: AppTypography.lightTextTheme.bodyMedium,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            if (leave.status == LeaveStatus.pending) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        leaveStore.approveLeave(leave.id);
-                        // Create notification for employee
-                        final notificationsStore =
-                            context.read<NotificationsStore>();
-                        final now = DateTime.now();
-                        notificationsStore.addNotification(
-                          AppNotification(
-                            id: 'leave_approved_${leave.id}_${now.millisecondsSinceEpoch}',
-                            title: 'Leave Request Approved',
-                            body:
-                                'Your leave request for ${leave.daysDisplay} has been approved.',
-                            createdAt: now,
-                            type: NotificationType.success,
-                            isRead: false,
-                          ),
-                        );
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Leave request approved')),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success,
-                        padding: AppSpacing.mdAll,
-                      ),
-                      child: const Text('Approve'),
-                    ),
+          ),
+          Padding(
+            padding: AppSpacing.lgAll,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Leave Request Details',
+                  style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _showRejectDialog(context, leave.id),
-                      style: OutlinedButton.styleFrom(
-                        padding: AppSpacing.mdAll,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                // Details section with subtle background
+                Container(
+                  padding: AppSpacing.mdAll,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: AppRadius.mediumAll,
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDetailRow('Employee', leave.userName ?? 'N/A'),
+                      const Divider(height: AppSpacing.md),
+                      _buildDetailRow('Leave Type', leave.leaveTypeDisplay),
+                      const Divider(height: AppSpacing.md),
+                      _buildDetailRow(
+                        'Date Range',
+                        '${_formatDate(leave.startDate)} - ${_formatDate(leave.endDate)}',
                       ),
-                      child: const Text('Reject'),
-                    ),
+                      if (leave.isHalfDay) ...[
+                        const Divider(height: AppSpacing.md),
+                        _buildDetailRow('Half Day', leave.halfDayPart == HalfDayPart.am ? 'AM' : 'PM'),
+                      ],
+                      const Divider(height: AppSpacing.md),
+                      _buildDetailRow('Days', leave.daysDisplay),
+                      const Divider(height: AppSpacing.md),
+                      _buildDetailRowWithStatus('Status', leave.statusDisplay, leave.status),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                // Reason section with subtle background
+                Container(
+                  padding: AppSpacing.mdAll,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: AppRadius.mediumAll,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reason',
+                        style: AppTypography.lightTextTheme.labelLarge?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        leave.reason.isEmpty ? 'No reason provided' : leave.reason,
+                        style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                          color: leave.reason.isEmpty 
+                              ? AppColors.textSecondary 
+                              : AppColors.textPrimary,
+                          fontStyle: leave.reason.isEmpty ? FontStyle.italic : FontStyle.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                if (leave.status == LeaveStatus.pending) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: store.isLeaveLoading(leave.id)
+                              ? null
+                              : () async {
+                                  try {
+                                    await store.approveOne(context, leave);
+                                    // Create notification for employee
+                                    final notificationsStore =
+                                        context.read<NotificationsStore>();
+                                    final now = DateTime.now();
+                                    notificationsStore.addNotification(
+                                      AppNotification(
+                                        id: 'leave_approved_${leave.id}_${now.millisecondsSinceEpoch}',
+                                        title: 'Leave Request Approved',
+                                        body:
+                                            'Your leave request for ${leave.daysDisplay} has been approved.',
+                                        createdAt: now,
+                                        type: NotificationType.success,
+                                        isRead: false,
+                                      ),
+                                    );
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Leave request approved'),
+                                          backgroundColor: AppColors.success,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Failed to approve: ${e.toString()}'),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.success,
+                            foregroundColor: Colors.white,
+                            padding: AppSpacing.mdAll,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: AppRadius.mediumAll,
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Approve',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: store.isLeaveLoading(leave.id)
+                              ? null
+                              : () => _showRejectDialog(context, leave, store),
+                          style: OutlinedButton.styleFrom(
+                            padding: AppSpacing.mdAll,
+                            side: BorderSide(
+                              color: AppColors.error,
+                              width: 1.5,
+                            ),
+                            foregroundColor: AppColors.error,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: AppRadius.mediumAll,
+                            ),
+                          ),
+                          child: const Text(
+                            'Reject',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-            const SizedBox(height: AppSpacing.md),
-          ],
-        ),
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 110,
             child: Text(
               label,
               style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -367,7 +754,61 @@ class _LeaveDetailSheet extends StatelessWidget {
             child: Text(
               value,
               style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRowWithStatus(String label, String value, LeaveStatus status) {
+    Color statusColor;
+    switch (status) {
+      case LeaveStatus.pending:
+        statusColor = AppColors.warning;
+        break;
+      case LeaveStatus.approved:
+        statusColor = AppColors.success;
+        break;
+      case LeaveStatus.rejected:
+        statusColor = AppColors.error;
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: AppRadius.smAll,
+              ),
+              child: Text(
+                value,
+                style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                  color: statusColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -380,28 +821,43 @@ class _LeaveDetailSheet extends StatelessWidget {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  void _showRejectDialog(BuildContext context, String leaveId) {
+  void _showRejectDialog(
+    BuildContext context,
+    LeaveRequest leave,
+    AdminLeaveApprovalsStore store,
+  ) {
     final reasonController = TextEditingController();
-    final leaveStore = context.read<LeaveStore>();
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Reject Leave Request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Please provide a reason for rejection:'),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: reasonController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'Enter rejection reason',
-                border: OutlineInputBorder(),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Please provide a reason for rejection:'),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                controller: reasonController,
+                maxLines: 3,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Rejection reason',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Reason is required';
+                  }
+                  return null;
+                },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -409,38 +865,50 @@ class _LeaveDetailSheet extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              if (reasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please provide a reason')),
-                );
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) {
                 return;
               }
-              leaveStore.rejectLeave(leaveId);
-              // Create notification for employee
-              final leave = leaveStore.leaveRequests
-                  .firstWhere((LeaveRequest l) => l.id == leaveId);
-              final notificationsStore = context.read<NotificationsStore>();
-              final now = DateTime.now();
-              notificationsStore.addNotification(
-                AppNotification(
-                  id: 'leave_rejected_${leaveId}_${now.millisecondsSinceEpoch}',
-                  title: 'Leave Request Rejected',
-                  body:
-                      'Your leave request for ${leave.daysDisplay} has been rejected. Reason: ${reasonController.text.trim()}',
-                  createdAt: now,
-                  type: NotificationType.error,
-                  isRead: false,
-                ),
-              );
-              Navigator.pop(dialogContext);
-              Navigator.pop(context); // Close bottom sheet
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Leave request rejected')),
-              );
+              try {
+                await store.rejectOne(context, leave, reason: reasonController.text.trim());
+                // Create notification for employee
+                final notificationsStore = context.read<NotificationsStore>();
+                final now = DateTime.now();
+                notificationsStore.addNotification(
+                  AppNotification(
+                    id: 'leave_rejected_${leave.id}_${now.millisecondsSinceEpoch}',
+                    title: 'Leave Request Rejected',
+                    body:
+                        'Your leave request for ${leave.daysDisplay} has been rejected. Reason: ${reasonController.text.trim()}',
+                    createdAt: now,
+                    type: NotificationType.error,
+                    isRead: false,
+                  ),
+                );
+                if (context.mounted) {
+                  Navigator.pop(dialogContext);
+                  Navigator.pop(context); // Close bottom sheet
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Leave request rejected'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to reject: ${e.toString()}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
             ),
             child: const Text('Reject'),
           ),

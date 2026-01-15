@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
 import 'package:sns_clocked_in/features/profile/application/profile_store.dart';
 import 'package:sns_clocked_in/features/profile/domain/user_profile.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -34,7 +35,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : appState.currentRole.value == 'admin'
             ? 'Admin'
             : 'Employee';
-    profileStore.updateRoleLabel(roleLabel);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      profileStore.updateRoleLabel(roleLabel);
+    });
     
     _phoneController = TextEditingController(text: profileStore.profile.phone ?? '');
     _departmentController = TextEditingController(text: profileStore.profile.department ?? '');
@@ -67,46 +71,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profileStore = context.watch<ProfileStore>();
     final profile = profileStore.profile;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Profile',
-          style: AppTypography.lightTextTheme.headlineMedium,
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.lgAll,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Profile Card
-                _buildProfileCard(profile),
-                const SizedBox(height: AppSpacing.lg),
+    return AppScreenScaffold(
+      skipScaffold: true,
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSpacing.md),
+              // Profile Card
+              _buildProfileCard(profile),
+              const SizedBox(height: AppSpacing.lg),
 
-                // Editable Fields
-                _buildEditableFields(),
-                const SizedBox(height: AppSpacing.lg),
+              // Editable Fields
+              _buildEditableFields(),
+              const SizedBox(height: AppSpacing.lg),
 
-                // Read-only Chips
-                _buildReadOnlyChips(profile),
-                const SizedBox(height: AppSpacing.xl),
+              // Read-only Chips
+              _buildReadOnlyChips(profile),
+              const SizedBox(height: AppSpacing.xl),
 
-                // Save Button
-                ElevatedButton(
-                  onPressed: _hasChanges ? _handleSave : null,
-                  style: ElevatedButton.styleFrom(
-                    padding: AppSpacing.lgAll,
-                  ),
-                  child: const Text('Save'),
+              // Save Button
+              ElevatedButton(
+                onPressed: _hasChanges ? _handleSave : null,
+                style: ElevatedButton.styleFrom(
+                  padding: AppSpacing.lgAll,
                 ),
-              ],
-            ),
+                child: const Text('Save'),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
           ),
         ),
       ),
@@ -135,31 +130,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       padding: AppSpacing.lgAll,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Avatar
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: AppColors.primary,
-            child: Text(
-              initials,
-              style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
-                color: Colors.white,
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              CircleAvatar(
+                radius: 42,
+                backgroundColor: AppColors.primary,
+                child: Text(
+                  initials,
+                  style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.all(AppSpacing.xs + 2), // 6dp for camera icon button
+                child: Icon(
+                  Icons.camera_alt_outlined,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.md),
-          // Name (read-only)
           Text(
             profile.fullName,
-            style: AppTypography.lightTextTheme.headlineMedium,
+            style: AppTypography.lightTextTheme.headlineMedium?.copyWith(
+              letterSpacing: -0.2,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          // Email (read-only)
           Text(
             profile.email,
             style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
               color: AppColors.textSecondary,
+              letterSpacing: -0.1,
             ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _pill(label: profile.roleLabel, color: AppColors.primary),
+              if (profile.employeeId != null)
+                _pill(label: 'ID: ${profile.employeeId!}', color: AppColors.muted),
+            ],
           ),
         ],
       ),
@@ -185,7 +217,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             'Contact Information',
-            style: AppTypography.lightTextTheme.labelLarge,
+            style: AppTypography.lightTextTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.1,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           // Phone field
@@ -236,7 +271,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             'Details',
-            style: AppTypography.lightTextTheme.labelLarge,
+            style: AppTypography.lightTextTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.1,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
@@ -287,16 +325,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
             '$label: ',
             style: AppTypography.lightTextTheme.bodySmall?.copyWith(
               color: color,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.1,
             ),
           ),
           Text(
             value,
             style: AppTypography.lightTextTheme.bodySmall?.copyWith(
               color: color,
+              letterSpacing: -0.1,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _pill({required String label, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: AppRadius.smAll,
+      ),
+      child: Text(
+        label,
+        style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.1,
+        ),
       ),
     );
   }

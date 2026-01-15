@@ -1,0 +1,16 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8080",
+  "executionArgs": {
+    "projectName": "snsclockedin-frontend",
+    "projectPath": "C:\\Users\\devcz\\Desktop\\Projects\\snsclockedin-frontend",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-c05sRZrTn6n80d1hS8qqNXk5mngVGRFPxtWsXuvflSLNQIsJGfpC81euQyC3G4241-J7rOGCr3EfYpX7Tj1QYTyf9bGyrR-FLPxB1v48XBTF2ds10XzpgRjklVH3a7j2PWs"
+    }
+  },
+  "proxy": "http://6f8d3a88-04c8-41e6-a869-12aa6caafbde:MiqwiOAQQGadHSA6cKDxOYuUKYY1QKRc@tun.testsprite.com:8080"
+}

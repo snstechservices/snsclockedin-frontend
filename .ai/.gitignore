@@ -1,0 +1,22 @@
+# AI Tracking System - Git Ignore Rules
+
+# DO commit these files (knowledge base):
+# - README.md
+# - AI_INTERACTION_LOG.md
+# - PROMPT_LIBRARY.md
+# - FEEDBACK_TEMPLATE.md
+# - config.json
+# - metrics.json
+
+# DON'T commit these (if generated):
+# - cache/
+# - temp/
+# - *.tmp
+# - *.backup
+
+# Optional: Don't commit auto-generated reports
+# reports/*.html
+# reports/*.pdf
+
+# Keep directory structure
+!.gitkeep

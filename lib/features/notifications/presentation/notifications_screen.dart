@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sns_clocked_in/core/role/role.dart';
+import 'package:sns_clocked_in/core/ui/app_card.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
+import 'package:sns_clocked_in/core/ui/segmented_filter_bar.dart';
+import 'package:sns_clocked_in/core/ui/stat_card.dart';
+import 'package:sns_clocked_in/core/ui/status_badge.dart';
 import 'package:sns_clocked_in/features/notifications/application/notifications_store.dart';
 import 'package:sns_clocked_in/features/notifications/domain/app_notification.dart';
 import 'package:sns_clocked_in/design_system/app_colors.dart';
@@ -22,8 +27,8 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  String? _deletedNotificationId;
   AppNotification? _deletedNotification;
+  NotificationTab _tab = NotificationTab.all;
 
   @override
   void initState() {
@@ -38,131 +43,174 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final notificationsStore = context.watch<NotificationsStore>();
     final notifications = notificationsStore.filteredBy;
+    _tab = notificationsStore.currentTab;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Notifications',
-          style: AppTypography.lightTextTheme.headlineMedium,
-        ),
-        actions: [
-          if (notificationsStore.unreadCount > 0)
-            IconButton(
-              icon: const Icon(Icons.done_all),
-              tooltip: 'Mark all as read',
-              onPressed: () {
-                notificationsStore.markAllRead();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All notifications marked as read'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Tabs
-            Padding(
-              padding: AppSpacing.lgAll,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildTabChip(
-                      'All',
-                      NotificationTab.all,
-                      notificationsStore,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _buildTabChip(
-                      'Unread',
-                      NotificationTab.unread,
-                      notificationsStore,
-                      badgeCount: notificationsStore.unreadCount,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    final totalCount = notificationsStore.all.length;
+    final unreadCount = notificationsStore.unreadCount;
+    final readCount = totalCount - unreadCount;
 
-            // Notifications List
-            Expanded(
-              child: notifications.isEmpty
-                  ? _buildEmptyState(notificationsStore.currentTab)
-                  : ListView.builder(
-                      padding: EdgeInsets.only(
-                        left: AppSpacing.lg,
-                        right: AppSpacing.lg,
-                        top: AppSpacing.sm,
-                        bottom: AppSpacing.xl,
+    return AppScreenScaffold(
+      skipScaffold: true,
+      child: Column(
+        children: [
+          // Quick Stats at top (always visible, match pattern)
+          _buildQuickStatsSection(
+            totalCount,
+            unreadCount,
+            readCount,
+            onMarkAllRead: notificationsStore.unreadCount > 0
+                ? () {
+                    notificationsStore.markAllRead();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('All notifications marked as read'),
+                        duration: Duration(seconds: 2),
+                        backgroundColor: AppColors.success,
                       ),
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: notifications.length,
-                      itemBuilder: (context, index) {
-                        return _buildNotificationCard(
-                          notifications[index],
-                          notificationsStore,
-                        );
-                      },
-                    ),
+                    );
+                  }
+                : null,
+          ),
+          // Tabs with SegmentedFilterBar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.sm,
             ),
-          ],
-        ),
+            child: SegmentedFilterBar<NotificationTab>(
+              selected: _tab,
+              onChanged: (value) {
+                notificationsStore.setTab(value);
+              },
+              options: [
+                FilterOption(label: 'All', value: NotificationTab.all),
+                FilterOption(
+                  label: 'Unread${notificationsStore.unreadCount > 0 ? ' (${notificationsStore.unreadCount})' : ''}',
+                  value: NotificationTab.unread,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Notifications List
+          Expanded(
+            child: notifications.isEmpty
+                ? _buildEmptyState(notificationsStore.currentTab)
+                : ListView.builder(
+                    padding: EdgeInsets.only(
+                      left: AppSpacing.lg,
+                      right: AppSpacing.lg,
+                      top: AppSpacing.sm,
+                      bottom: AppSpacing.xl,
+                    ),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      return _buildNotificationCard(
+                        notifications[index],
+                        notificationsStore,
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTabChip(
-    String label,
-    NotificationTab tab,
-    NotificationsStore store, {
-    int? badgeCount,
+  Widget _buildQuickStatsSection(
+    int total,
+    int unread,
+    int read, {
+    VoidCallback? onMarkAllRead,
   }) {
-    final isSelected = store.currentTab == tab;
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.textSecondary.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(label),
-          if (badgeCount != null && badgeCount > 0) ...[
-            const SizedBox(width: AppSpacing.xs),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xs,
-                vertical: 2,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: AppRadius.smAll,
-              ),
-              child: Text(
-                badgeCount.toString(),
-                style: AppTypography.lightTextTheme.bodySmall?.copyWith(
-                  color: Colors.white,
-                  fontSize: 10,
+          Row(
+            children: [
+              Icon(Icons.notifications, size: 18, color: AppColors.textSecondary),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Notifications Summary',
+                style: AppTypography.lightTextTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          ],
+              const Spacer(),
+              if (onMarkAllRead != null)
+                TextButton.icon(
+                  onPressed: onMarkAllRead,
+                  icon: const Icon(Icons.done_all, size: 18),
+                  label: const Text('Mark all'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    textStyle: AppTypography.lightTextTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    minimumSize: const Size(0, 36),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  title: 'Total',
+                  value: total.toString(),
+                  color: AppColors.primary,
+                  icon: Icons.notifications,
+                  dense: true,
+                  borderColor: AppColors.textSecondary.withValues(alpha: 0.15),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: StatCard(
+                  title: 'Unread',
+                  value: unread.toString(),
+                  color: AppColors.warning,
+                  icon: Icons.notifications_active,
+                  dense: true,
+                  borderColor: AppColors.textSecondary.withValues(alpha: 0.15),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: StatCard(
+                  title: 'Read',
+                  value: read.toString(),
+                  color: AppColors.success,
+                  icon: Icons.done_all,
+                  dense: true,
+                  borderColor: AppColors.textSecondary.withValues(alpha: 0.15),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          store.setTab(tab);
-        }
-      },
-      selectedColor: AppColors.primary.withValues(alpha: 0.2),
-      checkmarkColor: AppColors.primary,
     );
   }
 
@@ -228,7 +276,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       onDismissed: (direction) {
         setState(() {
-          _deletedNotificationId = notification.id;
           _deletedNotification = notification;
         });
         store.delete(notification.id);
@@ -241,7 +288,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 if (_deletedNotification != null) {
                   store.addNotification(_deletedNotification!);
                   setState(() {
-                    _deletedNotificationId = null;
                     _deletedNotification = null;
                   });
                 }
@@ -251,44 +297,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.mediumAll,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+      child: AppCard(
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
         child: InkWell(
           onTap: () {
             if (isUnread) {
               store.markRead(notification.id);
             }
           },
-          borderRadius: AppRadius.mediumAll,
           child: Padding(
             padding: AppSpacing.lgAll,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _getTypeColor(notification.type).withValues(alpha: 0.1),
-                    borderRadius: AppRadius.smAll,
-                  ),
-                  child: Icon(
-                    _getTypeIcon(notification.type),
-                    color: _getTypeColor(notification.type),
-                    size: 20,
-                  ),
+                // Icon/Badge column
+                Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _getTypeColor(notification.type).withValues(alpha: 0.1),
+                        borderRadius: AppRadius.smAll,
+                      ),
+                      child: Icon(
+                        _getTypeIcon(notification.type),
+                        color: _getTypeColor(notification.type),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    StatusBadge(
+                      label: notification.type.name,
+                      type: _badgeTypeFor(notification.type),
+                      compact: true,
+                    ),
+                  ],
                 ),
                 const SizedBox(width: AppSpacing.md),
                 // Content
@@ -368,6 +412,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Icons.warning_amber_outlined;
       case NotificationType.error:
         return Icons.error_outline;
+    }
+  }
+
+  StatusBadgeType _badgeTypeFor(NotificationType type) {
+    switch (type) {
+      case NotificationType.info:
+        return StatusBadgeType.info;
+      case NotificationType.success:
+        return StatusBadgeType.approved;
+      case NotificationType.warning:
+        return StatusBadgeType.warning;
+      case NotificationType.error:
+        return StatusBadgeType.rejected;
     }
   }
 }

@@ -77,6 +77,29 @@ class NotificationsStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set unread count directly (for testing)
+  void setUnreadCount(int count) {
+    // Ensure we have enough notifications to match the count
+    final now = DateTime.now();
+    while (_notifications.length < count) {
+      _notifications.add(
+        AppNotification(
+          id: 'demo-${_notifications.length + 1}',
+          title: 'Demo Notification ${_notifications.length + 1}',
+          body: 'This is a demo notification for testing.',
+          createdAt: now.subtract(Duration(hours: _notifications.length)),
+          type: NotificationType.info,
+          isRead: false,
+        ),
+      );
+    }
+    // Mark notifications as read/unread to match count
+    for (int i = 0; i < _notifications.length; i++) {
+      _notifications[i] = _notifications[i].copyWith(isRead: i >= count);
+    }
+    notifyListeners();
+  }
+
   /// Initialize with sample data
   void seedSampleData() {
     if (_notifications.isNotEmpty) return; // Already seeded
@@ -148,6 +171,85 @@ class NotificationsStore extends ChangeNotifier {
         isRead: true,
       ),
     ]);
+    notifyListeners();
+  }
+
+  /// Seed demo data for testing (sets unread count to 7)
+  void seedDemo() {
+    final now = DateTime.now();
+    _notifications.clear();
+    _notifications.addAll([
+      AppNotification(
+        id: 'demo-1',
+        title: 'Leave Request Approved',
+        body: 'Your leave request for Jan 20-22 has been approved.',
+        createdAt: now.subtract(const Duration(hours: 2)),
+        type: NotificationType.success,
+        isRead: false,
+      ),
+      AppNotification(
+        id: 'demo-2',
+        title: 'Timesheet Reminder',
+        body: 'Please submit your timesheet for last week.',
+        createdAt: now.subtract(const Duration(hours: 5)),
+        type: NotificationType.warning,
+        isRead: false,
+      ),
+      AppNotification(
+        id: 'demo-3',
+        title: 'Attendance Alert',
+        body: 'You forgot to clock out yesterday. Please update your attendance.',
+        createdAt: now.subtract(const Duration(days: 1, hours: 3)),
+        type: NotificationType.error,
+        isRead: false,
+      ),
+      AppNotification(
+        id: 'demo-4',
+        title: 'New Policy Update',
+        body: 'The company has updated its leave policy. Please review.',
+        createdAt: now.subtract(const Duration(days: 2)),
+        type: NotificationType.info,
+        isRead: false,
+      ),
+      AppNotification(
+        id: 'demo-5',
+        title: 'Leave Request Pending',
+        body: 'Your leave request is pending approval from your manager.',
+        createdAt: now.subtract(const Duration(days: 2, hours: 5)),
+        type: NotificationType.info,
+        isRead: false,
+      ),
+      AppNotification(
+        id: 'demo-6',
+        title: 'Welcome!',
+        body: 'Welcome to SNS Clocked In. Get started by clocking in.',
+        createdAt: now.subtract(const Duration(days: 3)),
+        type: NotificationType.success,
+        isRead: false,
+      ),
+      AppNotification(
+        id: 'demo-7',
+        title: 'Holiday Notice',
+        body: 'Company will be closed on Jan 26 for Republic Day.',
+        createdAt: now.subtract(const Duration(days: 4)),
+        type: NotificationType.info,
+        isRead: false,
+      ),
+      AppNotification(
+        id: 'demo-8',
+        title: 'System Maintenance',
+        body: 'Scheduled maintenance on Jan 25, 2:00 AM - 4:00 AM.',
+        createdAt: now.subtract(const Duration(days: 1)),
+        type: NotificationType.info,
+        isRead: true,
+      ),
+    ]);
+    notifyListeners();
+  }
+
+  /// Clear demo data (sets unread count to 0)
+  void clearDemo() {
+    _notifications.clear();
     notifyListeners();
   }
 }

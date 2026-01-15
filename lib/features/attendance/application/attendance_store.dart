@@ -1,51 +1,31 @@
 import 'package:flutter/foundation.dart';
+import 'package:sns_clocked_in/features/time_tracking/data/time_tracking_repository.dart';
+import 'package:sns_clocked_in/features/time_tracking/domain/time_entry.dart';
 
-/// Clock status enum
-enum ClockStatus {
-  notClockedIn,
-  clockedIn,
-  onBreak,
-}
-
-/// Attendance store for managing clock status
 class AttendanceStore extends ChangeNotifier {
-  ClockStatus _status = ClockStatus.notClockedIn;
+  final TimeTrackingRepository _repository;
+  
+  List<TimeEntry> _history = [];
+  bool _isLoading = false;
 
-  /// Current clock status
-  ClockStatus get status => _status;
+  AttendanceStore({
+    required TimeTrackingRepository repository,
+  }) : _repository = repository;
 
-  /// Set clock status (for testing/debugging)
-  void setStatus(ClockStatus status) {
-    _status = status;
+  List<TimeEntry> get history => _history;
+  bool get isLoading => _isLoading;
+
+  Future<void> loadHistory() async {
+    _isLoading = true;
     notifyListeners();
-  }
 
-  /// Clock in
-  void clockIn() {
-    _status = ClockStatus.clockedIn;
-    notifyListeners();
-  }
-
-  /// Clock out
-  void clockOut() {
-    _status = ClockStatus.notClockedIn;
-    notifyListeners();
-  }
-
-  /// Start break
-  void startBreak() {
-    if (_status == ClockStatus.clockedIn) {
-      _status = ClockStatus.onBreak;
-      notifyListeners();
-    }
-  }
-
-  /// End break
-  void endBreak() {
-    if (_status == ClockStatus.onBreak) {
-      _status = ClockStatus.clockedIn;
+    try {
+      _history = await _repository.getRecentEntries();
+    } catch (e) {
+      debugPrint('Error loading attendance history: $e');
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 }
-

@@ -1,0 +1,59 @@
+{
+  "project": {
+    "name": "SNS Clocked In v2",
+    "phase": "Phase 1 - Core Implementation",
+    "ai_tracking_version": "1.0.0",
+    "started_at": "2026-01-14"
+  },
+  "agents": {
+    "cursor_ai": {
+      "enabled": true,
+      "model": "claude-3.5-sonnet",
+      "config_file": ".cursorrules"
+    },
+    "claude_code": {
+      "enabled": true,
+      "model": "claude-sonnet-4-5"
+    },
+    "github_copilot": {
+      "enabled": false
+    }
+  },
+  "tracking": {
+    "log_file": "AI_INTERACTION_LOG.md",
+    "metrics_file": ".ai/metrics.json",
+    "feedback_file": ".ai/feedback.json",
+    "auto_log": true,
+    "min_log_duration_seconds": 120
+  },
+  "quality_standards": {
+    "min_quality_score": 3,
+    "require_tests": true,
+    "require_docs": false,
+    "linting": "very_good_analysis"
+  },
+  "categories": [
+    "Feature Development",
+    "Bug Fix",
+    "Refactoring",
+    "Documentation",
+    "Testing",
+    "UI/UX",
+    "Performance",
+    "Security"
+  ],
+  "success_criteria": {
+    "success": {
+      "description": "Works perfectly, minimal manual fixes",
+      "quality_score_min": 4
+    },
+    "partial": {
+      "description": "Works but needed significant fixes",
+      "quality_score_min": 3
+    },
+    "failed": {
+      "description": "Did not work, manual rewrite needed",
+      "quality_score_max": 2
+    }
+  }
+}

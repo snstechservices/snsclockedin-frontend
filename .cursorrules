@@ -1,0 +1,1005 @@
+# SNS Clocked In v2 - Cursor AI Rules
+
+## Project Overview
+**Project Name:** SNS Clocked In v2 (Phase 1 Redesign)
+**Description:** Modern Flutter employee time tracking and management system - Phase 1 implementation
+**Original Project:** SNS-Rooster (complete overhaul for cleaner architecture)
+**Version:** 2.0.0+1
+**Architecture:** Feature-first, clean architecture with Provider state management
+
+## Phase 1 Focus
+This is a Phase 1 redesign focusing on:
+- Simplified, maintainable architecture
+- Clean separation of concerns
+- Reusable component library
+- Role-based navigation (Admin/Employee)
+- Core features: Auth, Attendance, Leave, Timesheet, Employees, Notifications, Profile, Dashboard
+- Legacy code exists in `lib/legacy_ui/` for reference only (DO NOT import from this folder)
+
+---
+
+## Tech Stack
+
+### Core Technologies
+- **Flutter SDK:** >=3.0.0 <4.0.0
+- **Dart SDK:** >=3.0.0 <4.0.0
+- **State Management:** Provider 6.1.1
+- **Routing:** go_router 13.0.0
+- **HTTP Client:** Dio 5.4.0
+- **Local Storage:** shared_preferences 2.2.2
+- **Charts:** fl_chart 0.66.0
+- **Date Formatting:** intl 0.19.0
+- **UUID Generation:** uuid 4.5.0
+- **Linting:** very_good_analysis 5.1.0
+
+### Key Dependencies
+```yaml
+dependencies:
+  dio: ^5.4.0              # HTTP client
+  fl_chart: ^0.66.0        # Charts and graphs
+  flutter_dotenv: ^5.1.0   # Environment variables
+  go_router: ^13.0.0       # Declarative routing
+  intl: ^0.19.0            # Internationalization
+  provider: ^6.1.1         # State management
+  shared_preferences: ^2.2.2  # Local storage
+  uuid: ^4.5.0             # UUID generation
+```
+
+---
+
+## Architecture Principles
+
+### 1. Feature-First Structure
+```
+lib/
+├── app/                    # Application-level config
+│   ├── router/            # Navigation (go_router)
+│   │   └── app_router.dart
+│   └── theme/             # App theming
+│       └── theme_config.dart
+├── core/                   # Core utilities & shared code
+│   ├── config/            # Configuration
+│   ├── navigation/        # Navigation shells & config
+│   ├── state/             # AppState (global state)
+│   ├── storage/           # Storage helpers
+│   └── ui/                # Shared UI utilities
+├── design_system/         # Design tokens & components
+│   ├── app_colors.dart
+│   ├── app_typography.dart
+│   ├── app_spacing.dart
+│   ├── app_radius.dart
+│   └── components/        # Reusable UI components
+├── features/              # Feature modules (domain-driven)
+│   └── [feature]/
+│       ├── application/   # State management (Stores)
+│       ├── data/          # API clients, repositories
+│       ├── domain/        # Domain models, enums
+│       └── presentation/  # UI screens and widgets
+├── legacy_ui/             # Legacy code (REFERENCE ONLY)
+└── main.dart              # App entry point
+```
+
+### 2. Clean Architecture Layers
+Each feature follows this pattern:
+
+**Domain Layer** (`domain/`)
+- Pure Dart models (no Flutter dependencies)
+- Enums, value objects
+- Business logic helpers
+- Domain-level validation
+
+**Data Layer** (`data/`)
+- API clients
+- Repositories
+- DTOs (Data Transfer Objects)
+- Data source implementations
+
+**Application Layer** (`application/`)
+- Stores (Provider ChangeNotifier)
+- Application state
+- Commands and queries
+- API → Domain mapping
+
+**Presentation Layer** (`presentation/`)
+- Screens
+- Widgets
+- UI-specific logic
+- ONLY calls store methods, never direct API calls
+
+### 3. State Management with Provider
+- Use `ChangeNotifier` pattern for stores
+- Stores live in `features/[feature]/application/`
+- Global state in `lib/core/state/app_state.dart`
+- Use `context.watch<T>()` for reactive updates
+- Use `context.read<T>()` for one-time reads or actions
+- Never store UI logic in providers (keep them pure)
+
+---
+
+## Code Style & Standards
+
+### Dart Best Practices
+- Follow `very_good_analysis` linting rules (strict)
+- Use `const` constructors wherever possible
+- Prefer named parameters for widgets (readability)
+- Use trailing commas for better formatting
+- No commented-out code in commits
+- Extract magic numbers/strings to constants
+- Document complex logic with inline comments
+
+### Widget Guidelines
+```dart
+// GOOD: Named parameters, const, clear structure
+const MyWidget({
+  super.key,
+  required this.title,
+  this.subtitle,
+  this.onTap,
+});
+
+// BAD: Positional parameters, no const, unclear
+MyWidget(String title, [String? subtitle, Function? onTap]);
+```
+
+### State Management Pattern
+```dart
+// Store pattern (application layer)
+class FeatureStore extends ChangeNotifier {
+  // State
+  bool _isLoading = false;
+  String? _error;
+  List<Item> _items = [];
+
+  // Getters
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  List<Item> get items => _items;
+
+  // Commands
+  Future<void> loadItems() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _api.getItems();
+      _items = response.map(Item.fromJson).toList();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+}
+```
+
+### Screen Pattern
+```dart
+class MyScreen extends StatelessWidget {
+  const MyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<MyStore>();
+
+    return AppScreenScaffold(
+      title: 'My Screen',
+      body: store.isLoading
+          ? const CircularProgressIndicator()
+          : store.error != null
+              ? ErrorState(message: store.error!)
+              : _buildContent(store),
+    );
+  }
+
+  Widget _buildContent(MyStore store) {
+    // Build UI using store data
+    return Column(
+      children: [
+        // ...
+      ],
+    );
+  }
+}
+```
+
+---
+
+## Design System Rules
+
+### Color Palette
+```dart
+// Primary Colors
+Primary:        #1976D2 (Blue 700)
+PrimaryVariant: #1565C0 (Blue 800)
+Secondary:      #2196F3 (Blue 500)
+
+// Semantic Colors
+Success:   #2E7D32 (Green 800)
+Warning:   #ED6C02 (Orange 700)
+Error:     #D32F2F (Red 700)
+Muted:     #9E9E9E (Grey 500)
+
+// Background Colors
+Background: #F6F8FB (Light grey-blue)
+Surface:    #FFFFFF (White)
+```
+
+**ALWAYS use design tokens from:**
+- `AppColors` for colors
+- `AppTypography` for text styles
+- `AppSpacing` for spacing
+- `AppRadius` for border radius
+
+### Typography Scale
+```dart
+Display Hero:   28px / 900 weight
+Title Large:    20px / 700 weight
+Body Large:     16px / 400 weight
+Body Medium:    14px / 400 weight
+Small Caption:  12px / 300 weight
+```
+
+**Font:** Product Sans (primary), Open Sans (fallback)
+
+### Spacing Scale
+```dart
+XS:  4dp   // Minimal spacing, icon padding
+S:   8dp   // Tight spacing, compact lists
+M:   12dp  // Standard spacing, input padding
+L:   16dp  // Comfortable spacing, card padding
+XL:  24dp  // Generous spacing, section gaps
+```
+
+### Border Radius
+```dart
+Small:   8dp   // Chips, small buttons
+Medium:  12dp  // Cards, buttons, inputs (DEFAULT)
+Large:   16dp  // Dialogs, large cards
+```
+
+### Elevation (Shadow)
+```dart
+Low:     1.5dp  // Cards, AppBar (subtle)
+Medium:  4.0dp  // FAB, Dialogs
+High:    8.0dp  // Menus, Tooltips
+```
+
+---
+
+## UI Component Guidelines
+
+### 1. Use Standard Components
+**ALWAYS use these reusable components when available:**
+
+```dart
+// Layout
+AppScreenScaffold      // Standard screen wrapper (replaces Scaffold)
+AppCard                // Standard card component
+SectionHeader          // Section titles
+
+// Input
+AppTextField           // Styled text field
+AppButton              // Primary button
+AppOutlinedButton      // Secondary button
+
+// Status
+StatusBadge            // Status indicators
+EmptyState             // Empty state UI
+ErrorState             // Error state UI
+
+// Lists
+ListSkeleton           // Loading skeleton
+
+// Stats
+StatCard               // Dashboard stat cards
+ClickableStatCard      // Interactive stat cards
+
+// Filters
+SegmentedFilterBar     // Segmented filter
+CollapsibleFilterSection  // Collapsible filters
+
+// Navigation
+AppDrawer              // Main navigation drawer
+```
+
+### 2. AppScreenScaffold Pattern
+**ALWAYS wrap screens with `AppScreenScaffold` instead of `Scaffold`:**
+
+```dart
+return AppScreenScaffold(
+  title: 'Screen Title',
+  actions: [/* AppBar actions */],
+  floatingActionButton: /* FAB if needed */,
+  body: /* Screen content */,
+);
+```
+
+**Rules:**
+- AppBar title is set via `title` parameter
+- NO repeated titles in body content
+- Use `SectionHeader` for body sections instead
+- Actions go in `actions` parameter
+
+### 3. Stat Cards Pattern (Dashboard/List Screens)
+**Quick stats should be:**
+- Horizontal scrollable
+- Always visible at top (outside main scrollable content)
+- Fixed width cards (140px)
+- Consistent styling
+
+```dart
+// Good pattern
+Column(
+  children: [
+    // Quick stats section (always visible)
+    Container(
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      ),
+      padding: AppSpacing.lAll,
+      child: Column(
+        children: [
+          SectionHeader(title: 'Quick Stats'),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                StatCard(label: 'Total', value: '100', width: 140),
+                StatCard(label: 'Active', value: '80', width: 140),
+                // ...
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+    // Main scrollable content
+    Expanded(
+      child: ListView(/* ... */),
+    ),
+  ],
+);
+```
+
+### 4. Collapsible Filters Pattern
+```dart
+CollapsibleFilterSection(
+  title: 'Filters',
+  isExpanded: true, // Default expanded
+  children: [
+    // Filter widgets
+  ],
+);
+```
+
+### 5. Empty/Error States
+```dart
+// Empty state
+EmptyState(
+  icon: Icons.inbox_outlined,
+  message: 'No items found',
+  actionLabel: 'Add Item',
+  onAction: () => /* action */,
+);
+
+// Error state
+ErrorState(
+  message: 'Failed to load data',
+  onRetry: () => /* retry */,
+);
+```
+
+---
+
+## Navigation Rules
+
+### Role-Based Navigation
+- **Admin Shell:** `AdminShell` wraps admin routes
+- **Employee Shell:** `EmployeeShell` wraps employee routes
+- Routes defined in `lib/app/router/app_router.dart`
+- Navigation config in `lib/core/navigation/nav_config.dart`
+
+### Route Structure
+```dart
+// Admin routes: /admin/*
+/admin/dashboard
+/admin/employees
+/admin/attendance
+/admin/leave
+/admin/timesheet
+/admin/reports
+/admin/settings
+
+// Employee routes: /employee/*
+/employee/dashboard
+/employee/attendance
+/employee/leave
+/employee/timesheet
+/employee/profile
+/employee/notifications
+```
+
+### Navigation Patterns
+```dart
+// Use go_router navigation
+context.go('/employee/dashboard');      // Navigate to route
+context.push('/admin/employees/123');   // Push route
+context.pop();                          // Go back
+```
+
+---
+
+## File Naming Conventions
+
+### Dart Files
+```
+snake_case.dart                   // All Dart files
+feature_name_screen.dart          // Screens
+feature_name_store.dart           // Stores
+feature_name_api.dart            // API clients
+feature_name.dart                // Domain models
+```
+
+### Folders
+```
+snake_case/                      // All folders
+feature_name/                    // Feature folders
+```
+
+---
+
+## Migration & Phase 1 Rules
+
+### DO's ✅
+- Use `AppScreenScaffold` for all screens
+- Use design system components (`AppCard`, `AppButton`, etc.)
+- Follow feature-first structure
+- Use Provider stores for state
+- Extract reusable widgets to `core/ui/` or `design_system/components/`
+- Write widget tests for complex widgets
+- Document complex business logic
+
+### DON'Ts ❌
+- **NEVER import from `lib/legacy_ui/`** (reference only, not for production)
+- Don't use hardcoded colors (use `AppColors`)
+- Don't use hardcoded spacing (use `AppSpacing`)
+- Don't nest Scaffold widgets (causes issues)
+- Don't repeat AppBar title in body content
+- Don't make direct API calls from presentation layer (use stores)
+- Don't create feature-specific widgets in `core/ui/` (keep generic)
+- Don't use global state for feature-specific data (use feature stores)
+
+### Legacy Code
+```
+lib/legacy_ui/                   # Reference-only legacy code
+```
+**Rules:**
+- Reading allowed (for understanding patterns)
+- Copying small snippets allowed (for reference)
+- **IMPORTING NOT ALLOWED** (will break v2 routing/architecture)
+
+---
+
+## Testing Guidelines
+
+### Widget Tests
+- Test screens with `testWidgets`
+- Use `GoldenTestHelper` for golden tests (if available)
+- Mock stores with fake implementations
+- Test loading/error/success states
+- Test user interactions
+
+### Unit Tests
+- Test store logic
+- Test domain models
+- Test utility functions
+- Aim for 70%+ coverage on business logic
+
+### Test Location
+```
+test/
+├── features/
+│   └── [feature]/
+│       ├── application/        # Store tests
+│       ├── domain/            # Model tests
+│       └── presentation/      # Widget tests
+└── test_helpers.dart          # Shared test utilities
+```
+
+---
+
+## Environment & Configuration
+
+### Environment Variables (.env)
+```bash
+APP_ENV=development|staging|production
+API_BASE_URL=https://...
+```
+
+**Access via:**
+```dart
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+final apiUrl = dotenv.env['API_BASE_URL'];
+```
+
+### Build Flavors
+```bash
+# Development
+flutter run --dart-define=APP_ENV=development
+
+# Production
+flutter build apk --release --dart-define=APP_ENV=production
+```
+
+---
+
+## API Integration
+
+### HTTP Client (Dio)
+```dart
+// Configure in ApiClient (core/network/)
+final dio = Dio(
+  BaseOptions(
+    baseUrl: dotenv.env['API_BASE_URL']!,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+  ),
+);
+```
+
+### API Call Pattern (in Store)
+```dart
+Future<void> fetchData() async {
+  _isLoading = true;
+  _error = null;
+  notifyListeners();
+
+  try {
+    final response = await _api.getData();
+    _data = response.map(DomainModel.fromJson).toList();
+  } on DioException catch (e) {
+    _error = _handleDioError(e);
+  } catch (e) {
+    _error = 'Unexpected error: $e';
+  } finally {
+    _isLoading = false;
+    notifyListeners();
+  }
+}
+
+String _handleDioError(DioException e) {
+  if (e.response != null) {
+    return e.response!.data['message'] ?? 'Server error';
+  } else if (e.type == DioExceptionType.connectionTimeout) {
+    return 'Connection timeout';
+  } else {
+    return 'Network error';
+  }
+}
+```
+
+---
+
+## Performance Best Practices
+
+### Widget Optimization
+- Use `const` constructors liberally
+- Extract complex widgets to separate classes
+- Use `ListView.builder` for long lists
+- Use `CachedNetworkImage` for images
+- Avoid rebuilds with `context.select<T>((store) => store.value)`
+
+### State Management
+- Keep stores focused (single responsibility)
+- Don't notify listeners unnecessarily
+- Batch state updates when possible
+- Use computed properties (getters) instead of stored values
+
+### Asset Optimization
+- Compress images before adding to assets
+- Use SVG for icons when possible
+- Use appropriate image sizes for different screens
+
+---
+
+## Accessibility (a11y)
+
+### Guidelines
+- Minimum touch target: 48x48 dp (Material Design)
+- Color contrast ratio: 4.5:1 minimum (WCAG AA)
+- Provide semantic labels for screen readers
+- Support keyboard navigation (web/desktop)
+- Don't rely solely on color to convey information
+
+### Implementation
+```dart
+// Semantic labels
+Semantics(
+  label: 'Clock in button',
+  button: true,
+  child: ElevatedButton(/* ... */),
+);
+
+// Minimum touch target (handled by AppButton)
+// Contrast validation (handled by AppColors)
+```
+
+---
+
+## Git Workflow
+
+### Commit Message Format
+```
+type(scope): subject
+
+Body (optional)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `style`: Code style changes
+- `docs`: Documentation changes
+- `test`: Test additions/changes
+- `chore`: Build/config changes
+
+**Example:**
+```
+feat(attendance): add break management UI
+
+- Add break type selection
+- Implement break timer
+- Add break history list
+```
+
+### Branch Strategy
+- `main`: Production-ready code
+- `develop`: Development branch (if using)
+- `feature/*`: Feature branches
+- `bugfix/*`: Bug fix branches
+
+---
+
+## Common Patterns & Idioms
+
+### Pattern 1: Screen with Loading/Error/Content
+```dart
+class MyScreen extends StatelessWidget {
+  const MyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<MyStore>();
+
+    return AppScreenScaffold(
+      title: 'My Screen',
+      body: _buildBody(store),
+    );
+  }
+
+  Widget _buildBody(MyStore store) {
+    if (store.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (store.error != null) {
+      return ErrorState(
+        message: store.error!,
+        onRetry: () => store.loadData(),
+      );
+    }
+
+    if (store.items.isEmpty) {
+      return EmptyState(
+        message: 'No items found',
+        onAction: () => /* add item */,
+      );
+    }
+
+    return ListView.builder(
+      itemCount: store.items.length,
+      itemBuilder: (context, index) => _buildItem(store.items[index]),
+    );
+  }
+
+  Widget _buildItem(Item item) {
+    return AppCard(
+      child: ListTile(
+        title: Text(item.name),
+        subtitle: Text(item.description),
+        onTap: () => /* navigate to detail */,
+      ),
+    );
+  }
+}
+```
+
+### Pattern 2: Form Screen
+```dart
+class FormScreen extends StatefulWidget {
+  const FormScreen({super.key});
+
+  @override
+  State<FormScreen> createState() => _FormScreenState();
+}
+
+class _FormScreenState extends State<FormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final store = context.read<MyStore>();
+    await store.submitForm(name: _nameController.text);
+
+    if (mounted && store.error == null) {
+      context.pop(); // Go back on success
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<MyStore>();
+
+    return AppScreenScaffold(
+      title: 'Form Screen',
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: AppSpacing.lAll,
+          child: Column(
+            children: [
+              AppTextField(
+                controller: _nameController,
+                labelText: 'Name',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Name is required';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: AppSpacing.l),
+              AppButton(
+                onPressed: _submit,
+                label: 'Submit',
+                isLoading: store.isLoading,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### Pattern 3: Dashboard with Stats
+```dart
+class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<DashboardStore>();
+
+    return AppScreenScaffold(
+      title: 'Dashboard',
+      body: Column(
+        children: [
+          // Quick stats (always visible)
+          _buildQuickStats(store),
+
+          // Scrollable content
+          Expanded(
+            child: ListView(
+              padding: AppSpacing.lAll,
+              children: [
+                _buildWelcomeCard(store),
+                SizedBox(height: AppSpacing.l),
+                _buildQuickActions(),
+                SizedBox(height: AppSpacing.l),
+                _buildRecentActivity(store),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats(DashboardStore store) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        border: Border(
+          bottom: BorderSide(color: AppColors.divider),
+        ),
+      ),
+      padding: AppSpacing.lAll,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quick Stats',
+            style: AppTypography.titleMedium,
+          ),
+          SizedBox(height: AppSpacing.m),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                StatCard(
+                  label: 'Total',
+                  value: store.totalCount.toString(),
+                  width: 140,
+                ),
+                SizedBox(width: AppSpacing.m),
+                StatCard(
+                  label: 'Active',
+                  value: store.activeCount.toString(),
+                  width: 140,
+                ),
+                // More stat cards...
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### Issue: Nested Scaffolds
+**Problem:** Error about nested Scaffold widgets
+**Solution:** Use `AppScreenScaffold` instead of `Scaffold`, and ensure shells (AdminShell/EmployeeShell) only have one Scaffold
+
+#### Issue: Provider Not Found
+**Problem:** `ProviderNotFoundException`
+**Solution:** Ensure provider is registered in `main.dart` or use `ChangeNotifierProvider` in parent widget
+
+#### Issue: Context Issues
+**Problem:** Using context after async gap
+**Solution:** Check `mounted` before using context:
+```dart
+await someAsyncOperation();
+if (!mounted) return;
+context.go('/somewhere');
+```
+
+#### Issue: Null Check Errors
+**Problem:** Null safety errors
+**Solution:** Use null-aware operators (`?.`, `??`, `!`) appropriately
+
+---
+
+## Reference Documentation
+
+### Internal Documentation
+- `PHASE_1_IMPLEMENTATION_SUMMARY.md` - Phase 1 completion details
+- `PHASE_1_COMPLETION_STATUS.md` - Status tracking
+- `MIGRATION_CHECKLIST.md` - Feature migration guide
+- `lib/features/MIGRATION_NOTES_TEMPLATE.md` - Template for migrating features
+
+### External Resources
+- [Flutter Docs](https://flutter.dev/docs)
+- [Provider Package](https://pub.dev/packages/provider)
+- [go_router Package](https://pub.dev/packages/go_router)
+- [Material Design 3](https://m3.material.io/)
+- [very_good_analysis](https://pub.dev/packages/very_good_analysis)
+
+---
+
+## Quick Reference Card
+
+```dart
+// Colors
+AppColors.primary
+AppColors.secondary
+AppColors.success
+AppColors.warning
+AppColors.error
+AppColors.background
+AppColors.surface
+
+// Typography
+AppTypography.displayLarge
+AppTypography.titleLarge
+AppTypography.bodyLarge
+AppTypography.bodyMedium
+AppTypography.labelSmall
+
+// Spacing
+AppSpacing.xs   // 4dp
+AppSpacing.s    // 8dp
+AppSpacing.m    // 12dp
+AppSpacing.l    // 16dp
+AppSpacing.xl   // 24dp
+
+// Radius
+AppRadius.small   // 8dp
+AppRadius.medium  // 12dp
+AppRadius.large   // 16dp
+
+// Components
+AppScreenScaffold()
+AppCard()
+AppButton()
+AppTextField()
+StatCard()
+EmptyState()
+ErrorState()
+```
+
+---
+
+## AI Assistant Guidelines
+
+When assisting with this project:
+
+1. **Always** reference this .cursorrules file for architecture decisions
+2. **Always** use design system tokens instead of hardcoded values
+3. **Always** follow the established patterns (see Common Patterns section)
+4. **Never** suggest importing from `legacy_ui/` folder
+5. **Never** use nested Scaffold widgets
+6. **Prefer** Provider stores over inline state management
+7. **Prefer** extracting complex widgets over long build methods
+8. **Prefer** reusable components from design system over custom implementations
+9. **Suggest** following the migration checklist when adding new features
+10. **Ensure** all new code passes `very_good_analysis` linting
+
+### When Creating New Features:
+1. Check `MIGRATION_CHECKLIST.md` for the process
+2. Create folder structure: `domain/`, `data/`, `application/`, `presentation/`
+3. Start with domain models (pure Dart)
+4. Add store with loading/error states
+5. Build UI using `AppScreenScaffold` and design system components
+6. Add routes to `app_router.dart`
+7. Update navigation config if needed
+8. Write tests
+
+---
+
+**Last Updated:** 2026-01-14
+**Version:** 1.0.0
+**Maintainer:** Development Team
+
+---
+
+## Summary
+
+This is a Phase 1 redesign of SNS Clocked In with focus on:
+- Clean, maintainable architecture
+- Feature-first organization
+- Provider state management
+- Reusable design system
+- Role-based navigation
+- No legacy code dependencies
+
+**When in doubt:**
+1. Check Phase 1 documentation files
+2. Look at existing feature implementations
+3. Follow established patterns
+4. Use design system components
+5. Keep it simple and maintainable

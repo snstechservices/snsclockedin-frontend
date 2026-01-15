@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,11 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   bool _isHalfDay = false;
   HalfDayPart _halfDayPart = HalfDayPart.am;
   final _reasonController = TextEditingController();
+  bool _isSubmitting = false;
+  
+  // Validation errors
+  String? _startDateError;
+  String? _endDateError;
 
   @override
   void dispose() {
@@ -37,7 +43,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScreenScaffold(
-      title: 'Apply Leave',
+      skipScaffold: true,
       showBack: true,
       child: SingleChildScrollView(
         child: Form(
@@ -61,11 +67,14 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                       child: _buildDatePicker(
                         label: 'Start Date',
                         date: _startDate,
+                        errorText: _startDateError,
                         onDateSelected: (date) {
                           setState(() {
                             _startDate = date;
+                            _startDateError = null;
                             if (_endDate != null && _endDate!.isBefore(date)) {
                               _endDate = null;
+                              _endDateError = null;
                             }
                           });
                         },
@@ -76,16 +85,43 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                       child: _buildDatePicker(
                         label: 'End Date',
                         date: _endDate,
+                        errorText: _endDateError,
                         onDateSelected: (date) {
                           setState(() {
                             _endDate = date;
+                            _endDateError = null;
                           });
                         },
                         minDate: _startDate,
+                        required: !_isHalfDay,
                       ),
                     ),
                   ],
                 ),
+                if (_startDateError != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Padding(
+                    padding: const EdgeInsets.only(left: AppSpacing.sm),
+                    child: Text(
+                      _startDateError!,
+                      style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ],
+                if (_endDateError != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Padding(
+                    padding: const EdgeInsets.only(left: AppSpacing.sm),
+                    child: Text(
+                      _endDateError!,
+                      style: AppTypography.lightTextTheme.bodySmall?.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.lg),
 
                 // Half Day Toggle
@@ -131,11 +167,22 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
 
                 // Submit Button
                 ElevatedButton(
-                  onPressed: _handleSubmit,
+                  onPressed: _isSubmitting ? null : _handleSubmit,
                   style: ElevatedButton.styleFrom(
                     padding: AppSpacing.lgAll,
+                    backgroundColor: _isFormValid() ? AppColors.primary : AppColors.textSecondary,
+                    foregroundColor: AppColors.surface,
                   ),
-                  child: const Text('Submit Leave Request'),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.surface),
+                          ),
+                        )
+                      : const Text('Submit Leave Request'),
                 ),
                 const SizedBox(height: AppSpacing.lg),
               ],
@@ -193,7 +240,11 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     required DateTime? date,
     required Function(DateTime) onDateSelected,
     DateTime? minDate,
+    String? errorText,
+    bool required = true,
   }) {
+    final hasError = errorText != null;
+    
     return InkWell(
       onTap: () async {
         final picked = await showDatePicker(
@@ -215,7 +266,11 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
       child: Container(
         padding: AppSpacing.mdAll,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.textSecondary.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: hasError
+                ? AppColors.error
+                : AppColors.textSecondary.withValues(alpha: 0.3),
+          ),
           borderRadius: AppRadius.mediumAll,
         ),
         child: Row(
@@ -297,43 +352,92 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  void _handleSubmit() {
-    if (!_formKey.currentState!.validate()) return;
-    if (_startDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a start date')),
-      );
+  bool _isFormValid() {
+    if (_startDate == null) return false;
+    if (!_isHalfDay && _endDate == null) return false;
+    if (_reasonController.text.trim().isEmpty) return false;
+    return true;
+  }
+
+  Future<void> _handleSubmit() async {
+    // Clear previous errors
+    setState(() {
+      _startDateError = null;
+      _endDateError = null;
+    });
+
+    // Validate form
+    if (!_formKey.currentState!.validate()) {
       return;
+    }
+
+    // Validate dates
+    bool hasErrors = false;
+    if (_startDate == null) {
+      setState(() {
+        _startDateError = 'Please select a start date';
+        hasErrors = true;
+      });
     }
     if (!_isHalfDay && _endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an end date')),
-      );
+      setState(() {
+        _endDateError = 'Please select an end date';
+        hasErrors = true;
+      });
+    }
+
+    if (hasErrors || !_isFormValid()) {
       return;
     }
 
-    final appState = context.read<AppState>();
-    final leaveStore = context.read<LeaveStore>();
+    setState(() {
+      _isSubmitting = true;
+    });
 
-    final leaveRequest = LeaveRequest(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      userId: appState.userId ?? 'current_user',
-      leaveType: _selectedLeaveType,
-      startDate: _startDate!,
-      endDate: _isHalfDay ? _startDate! : _endDate!,
-      isHalfDay: _isHalfDay,
-      halfDayPart: _isHalfDay ? _halfDayPart : null,
-      reason: _reasonController.text.trim(),
-      status: LeaveStatus.pending,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final appState = context.read<AppState>();
+      final leaveStore = context.read<LeaveStore>();
 
-    leaveStore.addLeave(leaveRequest);
+      final leaveRequest = LeaveRequest(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: appState.userId ?? 'current_user',
+        leaveType: _selectedLeaveType,
+        startDate: _startDate!,
+        endDate: _isHalfDay ? _startDate! : _endDate!,
+        isHalfDay: _isHalfDay,
+        halfDayPart: _isHalfDay ? _halfDayPart : null,
+        reason: _reasonController.text.trim(),
+        status: LeaveStatus.pending,
+        createdAt: DateTime.now(),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Leave request submitted successfully')),
-    );
-    context.pop();
+      await leaveStore.addLeave(leaveRequest);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Leave request submitted successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 }
 

@@ -13,15 +13,36 @@ import 'package:sns_clocked_in/design_system/app_typography.dart';
 /// - Optional AppBar with title and actions
 /// - Default horizontal padding (24px)
 /// - Support for floatingActionButton and bottomNavigationBar
+/// - Support for drawer navigation
+///
+/// Example usage:
+/// ```dart
+/// AppScreenScaffold(
+///   title: 'Dashboard',
+///   actions: [IconButton(icon: Icon(Icons.settings), onPressed: () {})],
+///   child: YourContent(),
+/// )
+/// ```
+///
+/// When used inside a shell (AdminShell/EmployeeShell), use `skipScaffold: true`:
+/// ```dart
+/// AppScreenScaffold(
+///   skipScaffold: true,
+///   child: YourContent(),
+/// )
+/// ```
 class AppScreenScaffold extends StatelessWidget {
   const AppScreenScaffold({
     super.key,
     this.title,
     this.actions,
     this.showBack = false,
+    this.skipScaffold = false,
     required this.child,
     this.floatingActionButton,
     this.bottomNavigationBar,
+    this.drawer,
+    this.leading,
   });
 
   /// Optional screen title (shows AppBar if provided)
@@ -33,6 +54,9 @@ class AppScreenScaffold extends StatelessWidget {
   /// Show back button (default: false)
   final bool showBack;
 
+  /// Skip creating Scaffold (use when already inside a Scaffold, e.g., in shells)
+  final bool skipScaffold;
+
   /// Main content widget
   final Widget child;
 
@@ -42,36 +66,70 @@ class AppScreenScaffold extends StatelessWidget {
   /// Optional bottom navigation bar
   final Widget? bottomNavigationBar;
 
+  /// Optional drawer widget
+  final Widget? drawer;
+
+  /// Optional leading widget (e.g., hamburger menu icon)
+  final Widget? leading;
+
   @override
   Widget build(BuildContext context) {
+    // When skipScaffold is true, don't apply horizontal padding
+    // (used when content should extend to edges, e.g., TabBar)
+    final content = skipScaffold
+        ? SafeArea(child: child)
+        : SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: child,
+            ),
+          );
+
+    if (skipScaffold) {
+      // When used inside a shell, wrap content with FAB if provided
+      if (floatingActionButton != null) {
+        return Stack(
+          children: [
+            content,
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: floatingActionButton!,
+            ),
+          ],
+        );
+      }
+      return content;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(context),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: child,
-        ),
-      ),
+      body: content,
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
+      drawer: drawer,
     );
   }
 
   PreferredSizeWidget? _buildAppBar(BuildContext context) {
-    if (title == null && !showBack && (actions == null || actions!.isEmpty)) {
+    if (title == null &&
+        !showBack &&
+        leading == null &&
+        (actions == null || actions!.isEmpty)) {
       return null;
     }
 
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
-      leading: showBack
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
-            )
-          : null,
+      leading: leading ??
+          (showBack
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.pop(),
+                )
+              : null),
       title: title != null
           ? Text(
               title!,

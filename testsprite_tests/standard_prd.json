@@ -1,0 +1,265 @@
+{
+  "meta": {
+    "project": "SNS Clocked In v2 Frontend",
+    "date": "2026-01-14",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "SNS Clocked In v2 Frontend is a comprehensive Flutter-based employee time tracking and management system designed for multi-tenant environments. It offers feature-rich dashboards for admins and employees, seamless authentication, detailed attendance, leave and timesheet tracking, profile and notification management, and advanced admin/super admin capabilities with a unified design system and modern architecture.",
+  "core_goals": [
+    "Provide an intuitive and responsive UI for managing employee time tracking, attendance, leave, and timesheets.",
+    "Support multi-tenant access with company selection and tailored dashboards for admin, employee, and super admin roles.",
+    "Ensure robust authentication flow and onboarding experience for first-time users with smooth app bootstrap and routing.",
+    "Implement a scalable and maintainable feature-first Flutter architecture with Provider state management and go_router navigation.",
+    "Deliver a consistent design system with reusable UI components and adherence to best UI/UX practices including accessibility and responsiveness.",
+    "Ensure high-quality code through comprehensive widget testing covering all key screens, filters, and role-specific views."
+  ],
+  "key_features": [
+    "App bootstrap with routing and shell navigation including splash, onboarding, and home screens.",
+    "Authentication and user login UI with secure session and router guards.",
+    "Multi-tenant company selection screen to support different companies per user.",
+    "Role-specific dashboards: Admin dashboard with reports, employee management, attendance overview, and settings; Employee dashboard focused on personal attendance, timesheets, leave, and profile.",
+    "Attendance management including break types administration and daily timeline tracking.",
+    "Leave management with request submission, approval workflows, balances, and history tracking.",
+    "Timesheet submission by employees and admin approval workflows.",
+    "Time tracking feature with time entry logging and persistence.",
+    "Comprehensive employee management for admins including filtering and search capabilities.",
+    "Notifications system with status tracking (read/unread) and role-based filters.",
+    "User profile management for viewing and editing personal data.",
+    "Company calendar integration with month view and admin controls.",
+    "Super admin level management for system-wide configuration including companies, users, and system reports.",
+    "Centralized design system with consistent colors, typography, spacing, and reusable components like stat cards, buttons, filters, and empty or error states.",
+    "Responsive design adapting layout for mobile, tablet, and desktop breakpoints.",
+    "Accessibility compliance with semantic labeling, tooltips, and color contrast standards.",
+    "Debug tools and a component showcase for UI development and testing."
+  ],
+  "user_flow_summary": [
+    "User launches the app: splash screen shows while bootstrap processes run.",
+    "New users guided through onboarding flow before login.",
+    "User logs in via authentication screen, with validation and error handling.",
+    "Upon login, user selects company if applicable for multi-tenant environment.",
+    "User navigates to role-specific dashboard: Admin or Employee shell with bottom navigation tabs.",
+    "Admin can access quick stats, reports, attendance, employee management, break types, leave approvals, and company calendar via dashboard.",
+    "Employee can track attendance, submit timesheets, apply for leave, and view notifications and profile.",
+    "Users receive and manage notifications with ability to mark all as read and filter by scope.",
+    "Admin and super admin roles access advanced system management screens for companies, users, and system reports.",
+    "Users utilize collapsible filters sections to refine displayed data in lists and reports.",
+    "Throughout, UI states are managed with loading skeletons, empty states, and error states with retry options.",
+    "Quick stats section is persistently visible at top for key screens for immediate data glance."
+  ],
+  "validation_criteria": [
+    "All screens have comprehensive widget tests verifying UI structure, data display, role-specific content, and state handling (loading, empty, error).",
+    "Quick stats sections are always visible and display correct data across roles and screens.",
+    "Collapsible filters function correctly, default expanded, toggleable, hiding controls when collapsed.",
+    "No visual layout issues such as overflow errors or component clipping in tested scenarios.",
+    "Role-specific views correctly filter and present data according to user roles (admin, employee, super admin).",
+    "Search and filtering interactions yield correct subsets of data when used.",
+    "Authentication flow correctly redirects and guards routes as designed.",
+    "Responsive layouts adapt correctly on mobile, tablet, and desktop resolutions.",
+    "Accessibility requirements are met including semantic labels, tooltips, touch target sizes, and color contrast.",
+    "Reusable design system components conform to standards and appear consistent in all screens.",
+    "Debug and component showcase screens function properly and aid in UI verification.",
+    "Tests cover all enhanced Phase 1 screens with clear pass status in CI runs."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "Dart",
+      "Flutter",
+      "Provider",
+      "go_router",
+      "Dio",
+      "shared_preferences",
+      "fl_chart",
+      "intl"
+    ],
+    "features": [
+      {
+        "name": "app_entry",
+        "description": "App bootstrap, routing, and shell navigation setup.",
+        "files": [
+          "lib/main.dart",
+          "lib/app/router/app_router.dart",
+          "lib/core/navigation/nav_config.dart"
+        ]
+      },
+      {
+        "name": "design_system",
+        "description": "Shared design tokens and reusable UI components.",
+        "files": [
+          "lib/design_system/app_colors.dart",
+          "lib/design_system/app_typography.dart",
+          "lib/design_system/app_spacing.dart",
+          "lib/design_system/app_radius.dart"
+        ]
+      },
+      {
+        "name": "auth",
+        "description": "Authentication UI for user login.",
+        "files": [
+          "lib/features/auth/presentation/login_screen.dart"
+        ]
+      },
+      {
+        "name": "splash",
+        "description": "App splash screen experience.",
+        "files": [
+          "lib/features/splash/presentation/splash_screen.dart"
+        ]
+      },
+      {
+        "name": "onboarding",
+        "description": "Onboarding flow for first-time users.",
+        "files": [
+          "lib/features/onboarding/presentation/onboarding_screen.dart"
+        ]
+      },
+      {
+        "name": "company_selection",
+        "description": "Company selection screen for multi-tenant access.",
+        "files": [
+          "lib/features/company_selection/presentation/company_selection_screen.dart"
+        ]
+      },
+      {
+        "name": "admin_dashboard",
+        "description": "Admin dashboard and admin shell screens.",
+        "files": [
+          "lib/features/admin/dashboard/presentation/admin_dashboard_screen.dart",
+          "lib/features/admin/presentation/dashboard_screen.dart",
+          "lib/features/admin/presentation/reports_screen.dart",
+          "lib/features/admin/presentation/settings_screen.dart"
+        ]
+      },
+      {
+        "name": "employee_dashboard",
+        "description": "Employee dashboard and employee shell screens.",
+        "files": [
+          "lib/features/employee/dashboard/presentation/employee_dashboard_screen.dart",
+          "lib/features/employee/presentation/dashboard_screen.dart"
+        ]
+      },
+      {
+        "name": "attendance",
+        "description": "Attendance tracking and break types management.",
+        "files": [
+          "lib/features/attendance/application/attendance_store.dart",
+          "lib/features/attendance/application/break_types_store.dart",
+          "lib/features/attendance/data/break_types_repository.dart",
+          "lib/features/attendance/domain/attendance_event.dart",
+          "lib/features/attendance/presentation/my_attendance_screen.dart",
+          "lib/features/attendance/presentation/admin_break_types_screen.dart",
+          "lib/features/admin/presentation/attendance_screen.dart",
+          "lib/features/employee/presentation/attendance_screen.dart"
+        ]
+      },
+      {
+        "name": "leave",
+        "description": "Leave requests, balances, approvals, and history.",
+        "files": [
+          "lib/features/leave/application/leave_store.dart",
+          "lib/features/leave/application/admin_leave_approvals_store.dart",
+          "lib/features/leave/application/admin_leave_balances_store.dart",
+          "lib/features/leave/data/leave_repository.dart",
+          "lib/features/leave/domain/leave_request.dart",
+          "lib/features/leave/presentation/apply_leave_screen.dart",
+          "lib/features/leave/presentation/leave_overview_screen.dart",
+          "lib/features/leave/presentation/admin_leave_screen.dart"
+        ]
+      },
+      {
+        "name": "timesheet",
+        "description": "Timesheet submissions and admin approvals.",
+        "files": [
+          "lib/features/timesheet/application/timesheet_store.dart",
+          "lib/features/timesheet/application/admin_approvals_store.dart",
+          "lib/features/timesheet/data/timesheet_repository.dart",
+          "lib/features/timesheet/data/admin_approvals_repository.dart",
+          "lib/features/timesheet/domain/attendance_record.dart",
+          "lib/features/timesheet/presentation/employee_timesheet_screen.dart",
+          "lib/features/timesheet/presentation/admin_timesheet_approvals_screen.dart"
+        ]
+      },
+      {
+        "name": "time_tracking",
+        "description": "Time entry tracking and storage.",
+        "files": [
+          "lib/features/time_tracking/application/time_tracking_store.dart",
+          "lib/features/time_tracking/data/time_tracking_repository.dart",
+          "lib/features/time_tracking/domain/time_entry.dart"
+        ]
+      },
+      {
+        "name": "employees",
+        "description": "Admin employee management views and models.",
+        "files": [
+          "lib/features/employees/application/employees_store.dart",
+          "lib/features/employees/domain/employee.dart",
+          "lib/features/employees/presentation/admin_employees_screen.dart"
+        ]
+      },
+      {
+        "name": "notifications",
+        "description": "User notifications list and model.",
+        "files": [
+          "lib/features/notifications/application/notifications_store.dart",
+          "lib/features/notifications/domain/app_notification.dart",
+          "lib/features/notifications/presentation/notifications_screen.dart"
+        ]
+      },
+      {
+        "name": "profile",
+        "description": "User profile data and profile screens.",
+        "files": [
+          "lib/features/profile/application/profile_store.dart",
+          "lib/features/profile/domain/user_profile.dart",
+          "lib/features/profile/presentation/profile_screen.dart",
+          "lib/features/employee/presentation/profile_screen.dart"
+        ]
+      },
+      {
+        "name": "company_calendar",
+        "description": "Company calendar store, model, and calendar UI.",
+        "files": [
+          "lib/features/company_calendar/application/company_calendar_store.dart",
+          "lib/features/company_calendar/data/company_calendar_repository.dart",
+          "lib/features/company_calendar/domain/calendar_day.dart",
+          "lib/features/company_calendar/presentation/admin_company_calendar_screen.dart",
+          "lib/features/company_calendar/presentation/company_calendar_widget.dart"
+        ]
+      },
+      {
+        "name": "super_admin",
+        "description": "Super admin screens for system-level management.",
+        "files": [
+          "lib/features/super_admin/presentation/dashboard_screen.dart",
+          "lib/features/super_admin/presentation/companies_screen.dart",
+          "lib/features/super_admin/presentation/users_screen.dart",
+          "lib/features/super_admin/presentation/reports_screen.dart",
+          "lib/features/super_admin/presentation/system_screen.dart"
+        ]
+      },
+      {
+        "name": "home",
+        "description": "Home screen entry point.",
+        "files": [
+          "lib/features/home/presentation/home_screen.dart"
+        ]
+      },
+      {
+        "name": "debug_tools",
+        "description": "Debug and component showcase screens.",
+        "files": [
+          "lib/features/debug/presentation/debug_menu_screen.dart",
+          "lib/features/debug/presentation/debug_harness_screen.dart",
+          "lib/features/debug/presentation/component_showcase_screen.dart"
+        ]
+      },
+      {
+        "name": "unsupported",
+        "description": "Fallback UI for unsupported platforms or flows.",
+        "files": [
+          "lib/features/unsupported/presentation/unsupported_screen.dart"
+        ]
+      }
+    ]
+  }
+}

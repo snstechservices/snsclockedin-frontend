@@ -92,6 +92,16 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _fillDemoAndLogin() {
+    if (_isLoading) return;
+    setState(() {
+      _emailController.text = 'demo@snsclockedin.com';
+      _passwordController.text = 'Password123!';
+      _errorMessage = null;
+    });
+    _handleLogin();
+  }
+
   void _showHelpDialog() {
     showDialog<void>(
       context: context,
@@ -488,8 +498,34 @@ class _LoginScreenState extends State<LoginScreen> {
                             constraints: const BoxConstraints(),
                           ),
                         ],
+                        ),
+                      ),
+
+                  // Demo autofill + login
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 48,
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      key: const Key('login_demo_button'),
+                      onPressed: _fillDemoAndLogin,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: AppColors.primary.withValues(alpha: 0.6),
+                        ),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.smallAll,
+                        ),
+                      ),
+                      child: Text(
+                        'Autofill demo & sign in',
+                        style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
+                  ),
 
                   // Sign In Button
                   PressableScale(

@@ -39,6 +39,15 @@ class EmployeesStore extends ChangeNotifier {
   /// Current status filter
   EmployeeStatus? get statusFilter => _statusFilter;
 
+  /// Get total employee count
+  int get totalCount => _allEmployees.length;
+
+  /// Get active employee count
+  int get activeCount => _allEmployees.where((emp) => emp.status == EmployeeStatus.active).length;
+
+  /// Get inactive employee count
+  int get inactiveCount => _allEmployees.where((emp) => emp.status == EmployeeStatus.inactive).length;
+
   /// Set search query
   void search(String query) {
     _searchQuery = query;
@@ -55,6 +64,21 @@ class EmployeesStore extends ChangeNotifier {
   void clearFilters() {
     _searchQuery = '';
     _statusFilter = null;
+    notifyListeners();
+  }
+
+  /// Update an employee (local/demo only)
+  void updateEmployee(Employee employee) {
+    final index = _allEmployees.indexWhere((emp) => emp.id == employee.id);
+    if (index >= 0) {
+      _allEmployees[index] = employee;
+      notifyListeners();
+    }
+  }
+
+  /// Delete an employee (local/demo only)
+  void deleteEmployee(String id) {
+    _allEmployees.removeWhere((emp) => emp.id == id);
     notifyListeners();
   }
 
@@ -129,6 +153,13 @@ class EmployeesStore extends ChangeNotifier {
       ),
     ]);
     notifyListeners();
+  }
+
+  /// Debug-only seeding with sample data
+  void seedDebugData() {
+    if (!kDebugMode) return;
+    if (_allEmployees.isNotEmpty) return;
+    seedSampleData();
   }
 }
 

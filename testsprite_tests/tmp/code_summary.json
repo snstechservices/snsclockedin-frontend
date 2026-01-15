@@ -1,0 +1,202 @@
+{
+  "tech_stack": [
+    "Dart",
+    "Flutter",
+    "Provider",
+    "go_router",
+    "Dio",
+    "shared_preferences",
+    "fl_chart",
+    "intl"
+  ],
+  "features": [
+    {
+      "name": "app_entry",
+      "description": "App bootstrap, routing, and shell navigation setup.",
+      "files": [
+        "lib/main.dart",
+        "lib/app/router/app_router.dart",
+        "lib/core/navigation/nav_config.dart"
+      ]
+    },
+    {
+      "name": "design_system",
+      "description": "Shared design tokens and reusable UI components.",
+      "files": [
+        "lib/design_system/app_colors.dart",
+        "lib/design_system/app_typography.dart",
+        "lib/design_system/app_spacing.dart",
+        "lib/design_system/app_radius.dart"
+      ]
+    },
+    {
+      "name": "auth",
+      "description": "Authentication UI for user login.",
+      "files": [
+        "lib/features/auth/presentation/login_screen.dart"
+      ]
+    },
+    {
+      "name": "splash",
+      "description": "App splash screen experience.",
+      "files": [
+        "lib/features/splash/presentation/splash_screen.dart"
+      ]
+    },
+    {
+      "name": "onboarding",
+      "description": "Onboarding flow for first-time users.",
+      "files": [
+        "lib/features/onboarding/presentation/onboarding_screen.dart"
+      ]
+    },
+    {
+      "name": "company_selection",
+      "description": "Company selection screen for multi-tenant access.",
+      "files": [
+        "lib/features/company_selection/presentation/company_selection_screen.dart"
+      ]
+    },
+    {
+      "name": "admin_dashboard",
+      "description": "Admin dashboard and admin shell screens.",
+      "files": [
+        "lib/features/admin/dashboard/presentation/admin_dashboard_screen.dart",
+        "lib/features/admin/presentation/dashboard_screen.dart",
+        "lib/features/admin/presentation/reports_screen.dart",
+        "lib/features/admin/presentation/settings_screen.dart"
+      ]
+    },
+    {
+      "name": "employee_dashboard",
+      "description": "Employee dashboard and employee shell screens.",
+      "files": [
+        "lib/features/employee/dashboard/presentation/employee_dashboard_screen.dart",
+        "lib/features/employee/presentation/dashboard_screen.dart"
+      ]
+    },
+    {
+      "name": "attendance",
+      "description": "Attendance tracking and break types management.",
+      "files": [
+        "lib/features/attendance/application/attendance_store.dart",
+        "lib/features/attendance/application/break_types_store.dart",
+        "lib/features/attendance/data/break_types_repository.dart",
+        "lib/features/attendance/domain/attendance_event.dart",
+        "lib/features/attendance/presentation/my_attendance_screen.dart",
+        "lib/features/attendance/presentation/admin_break_types_screen.dart",
+        "lib/features/admin/presentation/attendance_screen.dart",
+        "lib/features/employee/presentation/attendance_screen.dart"
+      ]
+    },
+    {
+      "name": "leave",
+      "description": "Leave requests, balances, approvals, and history.",
+      "files": [
+        "lib/features/leave/application/leave_store.dart",
+        "lib/features/leave/application/admin_leave_approvals_store.dart",
+        "lib/features/leave/application/admin_leave_balances_store.dart",
+        "lib/features/leave/data/leave_repository.dart",
+        "lib/features/leave/domain/leave_request.dart",
+        "lib/features/leave/presentation/apply_leave_screen.dart",
+        "lib/features/leave/presentation/leave_overview_screen.dart",
+        "lib/features/leave/presentation/admin_leave_screen.dart"
+      ]
+    },
+    {
+      "name": "timesheet",
+      "description": "Timesheet submissions and admin approvals.",
+      "files": [
+        "lib/features/timesheet/application/timesheet_store.dart",
+        "lib/features/timesheet/application/admin_approvals_store.dart",
+        "lib/features/timesheet/data/timesheet_repository.dart",
+        "lib/features/timesheet/data/admin_approvals_repository.dart",
+        "lib/features/timesheet/domain/attendance_record.dart",
+        "lib/features/timesheet/presentation/employee_timesheet_screen.dart",
+        "lib/features/timesheet/presentation/admin_timesheet_approvals_screen.dart"
+      ]
+    },
+    {
+      "name": "time_tracking",
+      "description": "Time entry tracking and storage.",
+      "files": [
+        "lib/features/time_tracking/application/time_tracking_store.dart",
+        "lib/features/time_tracking/data/time_tracking_repository.dart",
+        "lib/features/time_tracking/domain/time_entry.dart"
+      ]
+    },
+    {
+      "name": "employees",
+      "description": "Admin employee management views and models.",
+      "files": [
+        "lib/features/employees/application/employees_store.dart",
+        "lib/features/employees/domain/employee.dart",
+        "lib/features/employees/presentation/admin_employees_screen.dart"
+      ]
+    },
+    {
+      "name": "notifications",
+      "description": "User notifications list and model.",
+      "files": [
+        "lib/features/notifications/application/notifications_store.dart",
+        "lib/features/notifications/domain/app_notification.dart",
+        "lib/features/notifications/presentation/notifications_screen.dart"
+      ]
+    },
+    {
+      "name": "profile",
+      "description": "User profile data and profile screens.",
+      "files": [
+        "lib/features/profile/application/profile_store.dart",
+        "lib/features/profile/domain/user_profile.dart",
+        "lib/features/profile/presentation/profile_screen.dart",
+        "lib/features/employee/presentation/profile_screen.dart"
+      ]
+    },
+    {
+      "name": "company_calendar",
+      "description": "Company calendar store, model, and calendar UI.",
+      "files": [
+        "lib/features/company_calendar/application/company_calendar_store.dart",
+        "lib/features/company_calendar/data/company_calendar_repository.dart",
+        "lib/features/company_calendar/domain/calendar_day.dart",
+        "lib/features/company_calendar/presentation/admin_company_calendar_screen.dart",
+        "lib/features/company_calendar/presentation/company_calendar_widget.dart"
+      ]
+    },
+    {
+      "name": "super_admin",
+      "description": "Super admin screens for system-level management.",
+      "files": [
+        "lib/features/super_admin/presentation/dashboard_screen.dart",
+        "lib/features/super_admin/presentation/companies_screen.dart",
+        "lib/features/super_admin/presentation/users_screen.dart",
+        "lib/features/super_admin/presentation/reports_screen.dart",
+        "lib/features/super_admin/presentation/system_screen.dart"
+      ]
+    },
+    {
+      "name": "home",
+      "description": "Home screen entry point.",
+      "files": [
+        "lib/features/home/presentation/home_screen.dart"
+      ]
+    },
+    {
+      "name": "debug_tools",
+      "description": "Debug and component showcase screens.",
+      "files": [
+        "lib/features/debug/presentation/debug_menu_screen.dart",
+        "lib/features/debug/presentation/debug_harness_screen.dart",
+        "lib/features/debug/presentation/component_showcase_screen.dart"
+      ]
+    },
+    {
+      "name": "unsupported",
+      "description": "Fallback UI for unsupported platforms or flows.",
+      "files": [
+        "lib/features/unsupported/presentation/unsupported_screen.dart"
+      ]
+    }
+  ]
+}

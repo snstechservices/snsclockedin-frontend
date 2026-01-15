@@ -1,0 +1,708 @@
+[
+  {
+    "id": "TC001",
+    "title": "App Launch and Splash Screen Display",
+    "description": "Verify the splash screen displays correctly during app bootstrap and transitions to the next screen based on user state.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Launch the app."
+      },
+      {
+        "type": "assertion",
+        "description": "Splash screen is visible immediately on launch."
+      },
+      {
+        "type": "assertion",
+        "description": "App bootstrap processes execute without error."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Onboarding Flow for First-Time Users",
+    "description": "Verify new users are guided through the onboarding screens before the login screen.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Launch app as a new user without stored credentials."
+      },
+      {
+        "type": "assertion",
+        "description": "Onboarding screens appear in correct sequence."
+      },
+      {
+        "type": "action",
+        "description": "Navigate through onboarding to completion."
+      },
+      {
+        "type": "assertion",
+        "description": "Onboarding completion navigates to login screen."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "User Login with Valid Credentials",
+    "description": "Check login success with correct username and password.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login screen."
+      },
+      {
+        "type": "action",
+        "description": "Enter valid username/email and password."
+      },
+      {
+        "type": "action",
+        "description": "Click the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "User is authenticated and navigated to company selection or dashboard screen."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "User Login with Invalid Credentials",
+    "description": "Verify login fails with incorrect username or password and error messages display appropriately.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login screen."
+      },
+      {
+        "type": "action",
+        "description": "Enter invalid username/email or password."
+      },
+      {
+        "type": "action",
+        "description": "Click the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Login is rejected with appropriate error message shown."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Multi-Tenant Company Selection Screen",
+    "description": "Verify that after login, users with multiple companies are prompted to select one and that selection routes correctly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as user belonging to multiple companies."
+      },
+      {
+        "type": "assertion",
+        "description": "Company selection screen is displayed."
+      },
+      {
+        "type": "action",
+        "description": "Select a company from the list."
+      },
+      {
+        "type": "assertion",
+        "description": "App navigates to the role-specific dashboard for the selected company."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Role-Specific Dashboard Display - Admin",
+    "description": "Verify that an Admin user sees the admin dashboard with correct tabs and sections including reports, employee management, attendance, and settings.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Admin user and select company."
+      },
+      {
+        "type": "assertion",
+        "description": "Admin dashboard loads with bottom navigation tabs visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Tabs for reports, employee management, attendance overview, break types, leave approvals, and settings are accessible."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Role-Specific Dashboard Display - Employee",
+    "description": "Verify that an Employee user sees the employee dashboard focusing on personal attendance, timesheets, leave, notifications, and profile.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Employee user and select company."
+      },
+      {
+        "type": "assertion",
+        "description": "Employee dashboard is loaded with relevant bottom navigation tabs."
+      },
+      {
+        "type": "assertion",
+        "description": "Sections for attendance tracking, timesheet submissions, leave applications, notifications, and user profile are present."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Attendance Management - View Daily Timeline",
+    "description": "Verify that users can view their daily attendance timeline with all logged punches and breaks displayed correctly.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to attendance screen from dashboard."
+      },
+      {
+        "type": "assertion",
+        "description": "Daily timeline is displayed, showing clock-in/out times and break periods."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Attendance Management - Admin Break Types Administration",
+    "description": "Verify that Admin can add, update, and delete break types in the break types management screen.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Admin Break Types screen."
+      },
+      {
+        "type": "action",
+        "description": "Add a new break type with valid parameters."
+      },
+      {
+        "type": "assertion",
+        "description": "Break type is added and visible in the list."
+      },
+      {
+        "type": "action",
+        "description": "Edit an existing break type."
+      },
+      {
+        "type": "assertion",
+        "description": "Changes to break type are saved and displayed."
+      },
+      {
+        "type": "action",
+        "description": "Delete a break type."
+      },
+      {
+        "type": "assertion",
+        "description": "Break type is removed from the list."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Leave Management - Apply for Leave",
+    "description": "Verify employees can submit leave requests with required fields and confirmation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Apply Leave screen."
+      },
+      {
+        "type": "action",
+        "description": "Fill in leave request details with valid data."
+      },
+      {
+        "type": "action",
+        "description": "Submit leave request."
+      },
+      {
+        "type": "assertion",
+        "description": "Leave request submission is successful and visible in leave history."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Leave Management - Admin Approve and Reject Leave Requests",
+    "description": "Verify Admin can approve or reject leave requests and updates reflect correctly in leave balances and history.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Admin Leave Approvals screen."
+      },
+      {
+        "type": "assertion",
+        "description": "Pending leave requests are listed."
+      },
+      {
+        "type": "action",
+        "description": "Approve a leave request."
+      },
+      {
+        "type": "assertion",
+        "description": "Leave request status updates to approved."
+      },
+      {
+        "type": "action",
+        "description": "Reject another leave request."
+      },
+      {
+        "type": "assertion",
+        "description": "Leave request status updates to rejected."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Timesheet Submission by Employee",
+    "description": "Verify that employees can submit daily or weekly timesheets with required fields and receive confirmation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Employee Timesheet screen."
+      },
+      {
+        "type": "action",
+        "description": "Enter timesheet details with valid data."
+      },
+      {
+        "type": "action",
+        "description": "Submit timesheet."
+      },
+      {
+        "type": "assertion",
+        "description": "Submission is successful and timesheet is listed appropriately."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Timesheet Admin Approval Workflow",
+    "description": "Verify Admin can view submitted timesheets and approve or reject them updating status accordingly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Admin Timesheet Approvals screen."
+      },
+      {
+        "type": "assertion",
+        "description": "Submitted timesheets are listed with correct details."
+      },
+      {
+        "type": "action",
+        "description": "Approve a timesheet entry."
+      },
+      {
+        "type": "assertion",
+        "description": "Timesheet status changes to approved."
+      },
+      {
+        "type": "action",
+        "description": "Reject another timesheet entry."
+      },
+      {
+        "type": "assertion",
+        "description": "Timesheet status changes to rejected."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Time Tracking - Time Entry Logging",
+    "description": "Verify that users can log time entries with start and end times and that entries persist across sessions.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Time Tracking screen."
+      },
+      {
+        "type": "action",
+        "description": "Log a new time entry with valid start and end times."
+      },
+      {
+        "type": "assertion",
+        "description": "Time entry is displayed in the list."
+      },
+      {
+        "type": "action",
+        "description": "Close and reopen the app."
+      },
+      {
+        "type": "assertion",
+        "description": "Previously logged time entries persist and are shown."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Admin Employee Management - Filtering and Search",
+    "description": "Verify Admin can filter and search employees in the management screen and correct filtered results are shown.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Admin Employees management screen."
+      },
+      {
+        "type": "action",
+        "description": "Use filter controls to filter employees by department, status or role."
+      },
+      {
+        "type": "assertion",
+        "description": "Filtered employee list updates accordingly."
+      },
+      {
+        "type": "action",
+        "description": "Use search box to lookup employee by name."
+      },
+      {
+        "type": "assertion",
+        "description": "Employee list shows employees matching search keywords."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Notifications Management - Mark All as Read and Filtering",
+    "description": "Verify users can mark all notifications as read and filter notifications based on roles and read/unread status.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open Notifications screen."
+      },
+      {
+        "type": "assertion",
+        "description": "List of notifications is displayed with accurate read/unread statuses."
+      },
+      {
+        "type": "action",
+        "description": "Mark all notifications as read."
+      },
+      {
+        "type": "assertion",
+        "description": "All notifications update to read status."
+      },
+      {
+        "type": "action",
+        "description": "Apply filters to view only unread notifications or by role."
+      },
+      {
+        "type": "assertion",
+        "description": "List updates to show filtered notifications."
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "User Profile - View and Edit Personal Data",
+    "description": "Verify users can view and successfully edit their profile information and changes persist.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Profile screen."
+      },
+      {
+        "type": "assertion",
+        "description": "Current profile information is displayed."
+      },
+      {
+        "type": "action",
+        "description": "Edit fields such as name, phone number, or email with valid data."
+      },
+      {
+        "type": "action",
+        "description": "Save changes."
+      },
+      {
+        "type": "assertion",
+        "description": "Profile updates reflect immediately and persist after app restart."
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Company Calendar - Month View and Admin Controls",
+    "description": "Verify the company calendar displays the month view correctly and Admin controls allow adding and editing calendar events.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Company Calendar screen."
+      },
+      {
+        "type": "assertion",
+        "description": "Month view calendar is displayed with events correctly marked."
+      },
+      {
+        "type": "action",
+        "description": "As Admin, add a new calendar event."
+      },
+      {
+        "type": "assertion",
+        "description": "New event appears on the calendar."
+      },
+      {
+        "type": "action",
+        "description": "Edit existing calendar event."
+      },
+      {
+        "type": "assertion",
+        "description": "Event is updated and changes reflected."
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Super Admin - System Level Management Screens",
+    "description": "Verify Super Admin can access system-wide configuration screens for companies, users, and system reports and perform expected management actions.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Super Admin user."
+      },
+      {
+        "type": "assertion",
+        "description": "Access dashboard, companies, users, reports, and system configuration screens."
+      },
+      {
+        "type": "action",
+        "description": "Add or modify company data."
+      },
+      {
+        "type": "assertion",
+        "description": "Changes saved and reflected in company list."
+      },
+      {
+        "type": "action",
+        "description": "Manage user accounts and verify changes."
+      },
+      {
+        "type": "assertion",
+        "description": "User account changes persist and are visible."
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Collapsible Filters - Default Expanded and Toggle",
+    "description": "Verify the collapsible filter sections are expanded by default and toggle correctly hiding and showing filter controls.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to screens with collapsible filters (e.g. employee management, reports)."
+      },
+      {
+        "type": "assertion",
+        "description": "Filters are expanded by default and controls are visible."
+      },
+      {
+        "type": "action",
+        "description": "Toggle the filters section to collapse."
+      },
+      {
+        "type": "assertion",
+        "description": "Filter controls are hidden and section header indicates collapsed state."
+      },
+      {
+        "type": "action",
+        "description": "Toggle the filters section to expand."
+      },
+      {
+        "type": "assertion",
+        "description": "Filter controls are visible again."
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "UI Loading, Empty, and Error States",
+    "description": "Verify that loading skeletons show during data fetch, empty states display when no data is present, and error states show appropriate messages with retry options on failure.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to key screens and simulate data loading state."
+      },
+      {
+        "type": "assertion",
+        "description": "Loading skeleton UI is displayed."
+      },
+      {
+        "type": "action",
+        "description": "Simulate no data condition."
+      },
+      {
+        "type": "assertion",
+        "description": "Empty states with informative messages and guidance are displayed."
+      },
+      {
+        "type": "action",
+        "description": "Simulate data fetch error."
+      },
+      {
+        "type": "assertion",
+        "description": "Error state UI shows descriptive message and retry control."
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Navigation Router Guards and Redirects",
+    "description": "Verify that router guards prevent unauthenticated access to protected routes and redirect users properly after login and company selection.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to access protected dashboard routes while unauthenticated."
+      },
+      {
+        "type": "assertion",
+        "description": "User is redirected to login screen."
+      },
+      {
+        "type": "action",
+        "description": "Login as user and complete company selection."
+      },
+      {
+        "type": "assertion",
+        "description": "User is routed to correct role-specific dashboard."
+      }
+    ]
+  },
+  {
+    "id": "TC023",
+    "title": "Responsive Layout on Mobile, Tablet, and Desktop",
+    "description": "Verify UI layout adapts correctly without overflow or clipping on different screen sizes and orientations.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open app on mobile device or emulator."
+      },
+      {
+        "type": "assertion",
+        "description": "Layout is correctly adapted with accessible controls."
+      },
+      {
+        "type": "action",
+        "description": "Resize to tablet viewport."
+      },
+      {
+        "type": "assertion",
+        "description": "UI rearranges appropriately, no overflow or clipping."
+      },
+      {
+        "type": "action",
+        "description": "Resize to desktop size."
+      },
+      {
+        "type": "assertion",
+        "description": "Layout uses larger viewport efficiently and remains visually consistent."
+      }
+    ]
+  },
+  {
+    "id": "TC024",
+    "title": "Accessibility Compliance - Semantic Labels and Color Contrast",
+    "description": "Verify UI elements have semantic labels, tooltips, sufficient touch target sizes, and meet color contrast standards for accessibility.",
+    "category": "security",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Use accessibility inspection tools to inspect all interactive UI controls."
+      },
+      {
+        "type": "assertion",
+        "description": "All buttons, inputs, links have semantic labels for screen readers."
+      },
+      {
+        "type": "assertion",
+        "description": "All UI elements meet minimum color contrast guidelines."
+      },
+      {
+        "type": "assertion",
+        "description": "Tooltips are present on icons where applicable."
+      }
+    ]
+  },
+  {
+    "id": "TC025",
+    "title": "Design System Components Consistency",
+    "description": "Verify reusable components such as stat cards, buttons, filters, and empty/error states conform to design standards and appear consistent across screens.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate through key app screens using reusable components."
+      },
+      {
+        "type": "assertion",
+        "description": "Colors, typography, spacing, and border radius conform to design tokens."
+      },
+      {
+        "type": "assertion",
+        "description": "Visual consistency maintained across different feature screens."
+      }
+    ]
+  },
+  {
+    "id": "TC026",
+    "title": "Debug Tools and Component Showcase Functionality",
+    "description": "Verify debug menu, debug harness, and component showcase screens display UI components correctly and assist in development and testing.",
+    "category": "functional",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to debug tools screens."
+      },
+      {
+        "type": "assertion",
+        "description": "All showcased components render correctly and interactive test examples function."
+      }
+    ]
+  }
+]

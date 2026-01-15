@@ -24,6 +24,23 @@ class Employee {
   final EmployeeStatus status;
   final Role role;
 
+  Employee copyWith({
+    String? fullName,
+    String? email,
+    String? department,
+    EmployeeStatus? status,
+    Role? role,
+  }) {
+    return Employee(
+      id: id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      department: department ?? this.department,
+      status: status ?? this.status,
+      role: role ?? this.role,
+    );
+  }
+
   /// Get display name for status
   String get statusDisplay {
     switch (status) {

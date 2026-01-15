@@ -9,6 +9,10 @@ class AppColors {
   static const Color primaryVariant = Color(0xFF1565C0); // Blue 800
   static const Color secondary = Color(0xFF2196F3); // Blue 500
 
+  // Action Accent Colors
+  static const Color danger = Color(0xFFE53935); // Red 600 (Clock Out)
+  static const Color breakAction = Color(0xFF6C5CE7); // Purple 500 (End Break)
+
   // Semantic Colors
   static const Color success = Color(0xFF2E7D32); // Green 800
   static const Color warning = Color(0xFFED6C02); // Orange 700

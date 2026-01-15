@@ -32,5 +32,14 @@ class ProfileStore extends ChangeNotifier {
     _profile = _profile.copyWith(roleLabel: roleLabel);
     notifyListeners();
   }
+
+  /// Debug-only seed to override profile with mock data
+  void seedDebugData({UserProfile? profile}) {
+    if (!kDebugMode) return;
+    if (profile != null) {
+      _profile = profile;
+    }
+    notifyListeners();
+  }
 }
 
