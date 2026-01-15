@@ -6,22 +6,38 @@ import 'package:sns_clocked_in/core/navigation/employee_shell.dart';
 import 'package:sns_clocked_in/core/role/role.dart';
 import 'package:sns_clocked_in/core/state/app_state.dart';
 import 'package:sns_clocked_in/core/ui/motion.dart';
+import 'package:sns_clocked_in/features/company_selection/presentation/company_selection_screen.dart';
 import 'package:sns_clocked_in/features/admin/dashboard/presentation/admin_dashboard_screen.dart';
-import 'package:sns_clocked_in/features/employees/presentation/admin_employees_screen.dart';
-import 'package:sns_clocked_in/features/admin/presentation/reports_screen.dart';
 import 'package:sns_clocked_in/features/admin/presentation/settings_screen.dart';
+import 'package:sns_clocked_in/features/employees/presentation/admin_employees_screen.dart';
+import 'package:sns_clocked_in/features/attendance/presentation/admin_break_types_screen.dart';
 import 'package:sns_clocked_in/features/attendance/presentation/my_attendance_screen.dart';
 import 'package:sns_clocked_in/features/auth/presentation/login_screen.dart';
 import 'package:sns_clocked_in/features/unsupported/presentation/unsupported_screen.dart';
-import 'package:sns_clocked_in/features/debug/presentation/debug_menu_screen.dart';
+import 'package:sns_clocked_in/features/debug/presentation/debug_harness_screen.dart';
 import 'package:sns_clocked_in/features/employee/dashboard/presentation/employee_dashboard_screen.dart';
+import 'package:sns_clocked_in/features/leave/presentation/admin_leave_balances_screen.dart';
+import 'package:sns_clocked_in/features/leave/presentation/admin_leave_history_screen.dart';
+import 'package:sns_clocked_in/features/leave/presentation/admin_leave_overview_screen.dart';
 import 'package:sns_clocked_in/features/leave/presentation/admin_leave_screen.dart';
 import 'package:sns_clocked_in/features/leave/presentation/apply_leave_screen.dart';
-import 'package:sns_clocked_in/features/leave/presentation/leave_list_screen.dart';
+import 'package:sns_clocked_in/features/leave/presentation/leave_history_screen.dart';
+import 'package:sns_clocked_in/features/leave/presentation/leave_calendar_screen.dart';
+import 'package:sns_clocked_in/features/leave/presentation/leave_overview_screen.dart';
 import 'package:sns_clocked_in/features/notifications/presentation/notifications_screen.dart';
 import 'package:sns_clocked_in/features/profile/presentation/profile_screen.dart';
 import 'package:sns_clocked_in/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:sns_clocked_in/features/splash/presentation/splash_screen.dart';
+import 'package:sns_clocked_in/features/timesheet/presentation/employee_timesheet_screen.dart';
+import 'package:sns_clocked_in/features/timesheet/presentation/admin_timesheet_approvals_screen.dart';
+import 'package:sns_clocked_in/features/timesheet_admin/presentation/admin_timesheet_screen.dart';
+import 'package:sns_clocked_in/features/company_calendar/presentation/admin_company_calendar_screen.dart';
+import 'package:sns_clocked_in/features/admin/presentation/reports_screen.dart';
+import 'package:sns_clocked_in/features/debug/presentation/component_showcase_screen.dart';
+import 'package:sns_clocked_in/core/ui/app_screen_scaffold.dart';
+import 'package:sns_clocked_in/design_system/app_colors.dart';
+import 'package:sns_clocked_in/design_system/app_spacing.dart';
+import 'package:sns_clocked_in/design_system/app_typography.dart';
 
 class AppRouter {
   AppRouter._();
@@ -32,9 +48,23 @@ class AppRouter {
       initialLocation: '/',
       refreshListenable: appState,
       redirect: (context, state) {
+        final location = state.uri.path;
+
+        // Allow /debug in debug mode regardless of bootstrap/auth/role state
+        if (kDebugMode && location == '/debug') {
+          return null;
+        }
+
         final isBootstrapped = appState.isBootstrapped;
         final isAuthenticated = appState.isAuthenticated;
-        final location = state.uri.path;
+
+        // Company selection gate: if authenticated but company not chosen and multiple companies
+        if (isAuthenticated && appState.requiresCompanySelection) {
+          if (location == '/company-select') {
+            return null;
+          }
+          return '/company-select';
+        }
 
         // If not bootstrapped, only allow splash
         if (!isBootstrapped) {
@@ -130,6 +160,15 @@ class AppRouter {
           ),
         ),
         GoRoute(
+          path: '/company-select',
+          name: 'company_select',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const CompanySelectionScreen(),
+          ),
+        ),
+        GoRoute(
           path: '/onboarding',
           name: 'onboarding',
           pageBuilder: (context, state) => _buildTransitionPage(
@@ -193,7 +232,7 @@ class AppRouter {
             context: context,
             state: state,
             child: const EmployeeShell(
-              child: LeaveListScreen(),
+              child: LeaveOverviewScreen(),
             ),
           ),
         ),
@@ -205,6 +244,28 @@ class AppRouter {
             state: state,
             child: const EmployeeShell(
               child: ApplyLeaveScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/e/leave/history',
+          name: 'employee_leave_history',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const EmployeeShell(
+              child: LeaveHistoryScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/e/leave/calendar',
+          name: 'employee_leave_calendar',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const EmployeeShell(
+              child: LeaveCalendarScreen(),
             ),
           ),
         ),
@@ -227,6 +288,17 @@ class AppRouter {
             state: state,
             child: const EmployeeShell(
               child: NotificationsScreen(roleScope: Role.employee),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/e/timesheet',
+          name: 'employee_timesheet',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const EmployeeShell(
+              child: EmployeeTimesheetScreen(),
             ),
           ),
         ),
@@ -268,14 +340,80 @@ class AppRouter {
             ),
           ),
         ),
+        // Admin Leave Management - route-based tabs
         GoRoute(
           path: '/a/leave',
-          name: 'admin_leave',
+          redirect: (context, state) => '/a/leave/requests', // Default to Requests tab
+        ),
+        GoRoute(
+          path: '/a/leave/requests',
+          name: 'admin_leave_requests',
           pageBuilder: (context, state) => _buildTransitionPage(
             context: context,
             state: state,
             child: const AdminShell(
-              child: AdminLeaveScreen(),
+              child: AdminLeaveOverviewScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/a/leave/balances',
+          name: 'admin_leave_balances',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: AdminLeaveOverviewScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/a/leave/accruals',
+          name: 'admin_leave_accruals',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: AdminLeaveOverviewScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/a/leave/cashout',
+          name: 'admin_leave_cashout',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: AdminLeaveOverviewScreen(),
+            ),
+          ),
+        ),
+        // Legacy route for backward compatibility
+        GoRoute(
+          path: '/a/leave/approvals',
+          name: 'admin_leave_approvals',
+          redirect: (context, state) => '/a/leave/requests',
+        ),
+        GoRoute(
+          path: '/a/leave/history',
+          name: 'admin_leave_history',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: AdminLeaveHistoryScreenWrapper(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/a/leave/apply',
+          name: 'admin_leave_apply',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: ApplyLeaveScreen(),
             ),
           ),
         ),
@@ -287,6 +425,39 @@ class AppRouter {
             state: state,
             child: const AdminShell(
               child: AdminReportsScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/a/break-types',
+          name: 'admin_break_types',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: AdminBreakTypesScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/a/calendar',
+          name: 'admin_company_calendar',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: AdminCompanyCalendarScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/a/timesheets',
+          name: 'admin_timesheets',
+          pageBuilder: (context, state) => _buildTransitionPage(
+            context: context,
+            state: state,
+            child: const AdminShell(
+              child: AdminTimesheetScreen(),
             ),
           ),
         ),
@@ -312,17 +483,27 @@ class AppRouter {
             ),
           ),
         ),
-        // Debug route - only available in debug mode
-        if (kDebugMode)
+        // Debug routes - only available in debug mode
+        if (kDebugMode) ...[
           GoRoute(
             path: '/debug',
             name: 'debug',
             pageBuilder: (context, state) => _buildTransitionPage(
               context: context,
               state: state,
-              child: const DebugMenuScreen(),
+              child: const DebugHarnessScreen(),
             ),
           ),
+          GoRoute(
+            path: '/debug/component-showcase',
+            name: 'component_showcase',
+            pageBuilder: (context, state) => _buildTransitionPage(
+              context: context,
+              state: state,
+              child: const ComponentShowcaseScreen(),
+            ),
+          ),
+        ],
       ],
       // Error handling
       errorBuilder: (context, state) => const SplashScreen(),
@@ -386,6 +567,45 @@ class AppRouter {
       },
       transitionDuration: duration,
       reverseTransitionDuration: duration,
+    );
+  }
+}
+
+/// Placeholder for Company Calendar (Coming soon)
+class _LeaveCalendarPlaceholder extends StatelessWidget {
+  const _LeaveCalendarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScreenScaffold(
+      title: 'Company Calendar',
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 80,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Company Calendar',
+                style: AppTypography.lightTextTheme.headlineMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Coming soon',
+                style: AppTypography.lightTextTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
